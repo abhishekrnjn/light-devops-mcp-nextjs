@@ -4,13 +4,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { useJWT } from '@/hooks/useJWT';
 import { useMCPConnection } from '@/hooks/useMCPConnection';
 import { MetricEntry } from '@/types/mcp';
+import { ErrorDisplay } from '@/components/common/ErrorDisplay';
 
 export const MetricsTab = () => {
   const { token } = useJWT();
-  const { mcpService } = useMCPConnection();
+  const { mcpService, isConnected } = useMCPConnection();
   const [metrics, setMetrics] = useState<MetricEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthError, setIsAuthError] = useState(false);
   const [limit, setLimit] = useState(20);
   const [isClient, setIsClient] = useState(false);
 
@@ -19,11 +21,12 @@ export const MetricsTab = () => {
   }, []);
 
   const fetchMetrics = useCallback(async () => {
-    if (!token) return;
-    
+    if (!token || !isConnected) return;
+
     setIsLoading(true);
     setError(null);
-    
+    setIsAuthError(false);
+
     try {
       const response = await mcpService.getMetrics(token, limit);
       if (response.success) {
@@ -32,16 +35,18 @@ export const MetricsTab = () => {
         setMetrics(metricsData);
       } else {
         setError(response.error || 'Failed to fetch metrics');
+        setIsAuthError(response.isAuthError || false);
         setMetrics([]); // Reset to empty array on error
       }
     } catch (error) {
       console.error('Error fetching metrics:', error);
       setError('Failed to fetch metrics');
+      setIsAuthError(false);
       setMetrics([]); // Reset to empty array on error
     } finally {
       setIsLoading(false);
     }
-  }, [token, limit, mcpService]);
+  }, [token, limit, mcpService, isConnected]);
 
   useEffect(() => {
     if (isClient) {
@@ -94,14 +99,20 @@ export const MetricsTab = () => {
         </div>
       </div>
 
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error}
-        </div>
-      )}
+      <ErrorDisplay 
+        error={error} 
+        onRetry={fetchMetrics}
+        className="mb-4"
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {Array.isArray(metrics) && metrics.map((metric, index) => (
+        {!isConnected ? (
+          <div className="col-span-full text-center py-8">
+            <div className="text-4xl mb-4">⚠️</div>
+            <p className="text-slate-600 mb-2">MCP Server Offline</p>
+            <p className="text-sm text-slate-500">Metrics cannot be fetched while the server is offline.</p>
+          </div>
+        ) : Array.isArray(metrics) && metrics.map((metric, index) => (
           <div key={index} className="bg-white p-4 rounded-lg border shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <h4 className="font-medium text-slate-900">{metric.name}</h4>

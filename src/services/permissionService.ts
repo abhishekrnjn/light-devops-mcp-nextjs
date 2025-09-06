@@ -8,7 +8,8 @@ const mapRolesToPermissions = (roles: string[]): UserPermissions => {
     read_metrics: false,
     deploy_staging: false,
     deploy_production: false,
-    rollback_deployment: false,
+    rollback_staging: false,
+    rollback_production: false,
     authenticate_user: false,
   };
 
@@ -20,7 +21,8 @@ const mapRolesToPermissions = (roles: string[]): UserPermissions => {
         permissions.read_metrics = true;
         permissions.deploy_staging = true;
         permissions.deploy_production = true;
-        permissions.rollback_deployment = true;
+        permissions.rollback_staging = true;
+        permissions.rollback_production = true;
         permissions.authenticate_user = true;
         break;
       case 'developer':
@@ -44,7 +46,8 @@ const mapRolesToPermissions = (roles: string[]): UserPermissions => {
         permissions.read_metrics = true;
         permissions.deploy_staging = true;
         permissions.deploy_production = true;
-        permissions.rollback_deployment = true;
+        permissions.rollback_staging = true;
+        permissions.rollback_production = true;
         permissions.authenticate_user = true;
         break;
     }
@@ -59,7 +62,8 @@ export class PermissionService {
     read_metrics: false,
     deploy_staging: false,
     deploy_production: false,
-    rollback_deployment: false,
+    rollback_staging: false,
+    rollback_production: false,
     authenticate_user: false,
   };
 
@@ -102,9 +106,13 @@ export class PermissionService {
               permissions.deploy_production = true;
               console.log('    ✅ Set deploy_production = true');
               break;
-            case 'rollback_deployment':
-              permissions.rollback_deployment = true;
-              console.log('    ✅ Set rollback_deployment = true');
+            case 'rollback_staging':
+              permissions.rollback_staging = true;
+              console.log('    ✅ Set rollback_staging = true');
+              break;
+            case 'rollback_production':
+              permissions.rollback_production = true;
+              console.log('    ✅ Set rollback_production = true');
               break;
             case 'authenticate_user':
               permissions.authenticate_user = true;
@@ -133,7 +141,7 @@ export class PermissionService {
       'logs': 'read_logs',
       'metrics': 'read_metrics',
       'deploy': 'deploy_staging', // Default to staging for deploy
-      'rollback': 'rollback_deployment',
+      'rollback': 'rollback_staging', // Default to staging for rollback
     };
     
     const permission = resourcePermissionMap[resource];
@@ -146,7 +154,8 @@ export class PermissionService {
       'get_logs': 'read_logs',
       'get_metrics': 'read_metrics',
       'deploy_service': environment === 'production' ? 'deploy_production' : 'deploy_staging',
-      'rollback_deployment': 'rollback_deployment',
+      'rollback_staging': 'rollback_staging',
+      'rollback_production': 'rollback_production',
       'authenticate_user': 'authenticate_user',
     };
     
@@ -160,7 +169,7 @@ export class PermissionService {
     if (this.hasPermission('read_logs')) tabs.push('logs');
     if (this.hasPermission('read_metrics')) tabs.push('metrics');
     if (this.hasPermission('deploy_staging') || this.hasPermission('deploy_production')) tabs.push('deploy');
-    if (this.hasPermission('rollback_deployment')) tabs.push('rollback');
+    if (this.hasPermission('rollback_staging') || this.hasPermission('rollback_production')) tabs.push('rollback');
     tabs.push('ai'); // AI tab is always available
     
     return tabs;

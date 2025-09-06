@@ -4,13 +4,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { useJWT } from '@/hooks/useJWT';
 import { useMCPConnection } from '@/hooks/useMCPConnection';
 import { LogEntry } from '@/types/mcp';
+import { ErrorDisplay } from '@/components/common/ErrorDisplay';
 
 export const LogsTab = () => {
   const { token } = useJWT();
-  const { mcpService } = useMCPConnection();
+  const { mcpService, isConnected } = useMCPConnection();
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthError, setIsAuthError] = useState(false);
   const [filters, setFilters] = useState({ level: '', limit: 10 });
   const [isClient, setIsClient] = useState(false);
 
@@ -19,11 +21,12 @@ export const LogsTab = () => {
   }, []);
 
   const fetchLogs = useCallback(async () => {
-    if (!token) return;
-    
+    if (!token || !isConnected) return;
+
     setIsLoading(true);
     setError(null);
-    
+    setIsAuthError(false);
+
     try {
       const response = await mcpService.getLogs(token, filters.level || undefined, filters.limit);
       if (response.success) {
@@ -32,16 +35,18 @@ export const LogsTab = () => {
         setLogs(logsData);
       } else {
         setError(response.error || 'Failed to fetch logs');
+        setIsAuthError(response.isAuthError || false);
         setLogs([]); // Reset to empty array on error
       }
     } catch (error) {
       console.error('Error fetching logs:', error);
       setError('Failed to fetch logs');
+      setIsAuthError(false);
       setLogs([]); // Reset to empty array on error
     } finally {
       setIsLoading(false);
     }
-  }, [token, filters, mcpService]);
+  }, [token, filters, mcpService, isConnected]);
 
   useEffect(() => {
     if (isClient) {
@@ -110,16 +115,22 @@ export const LogsTab = () => {
         />
       </div>
 
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error}
-        </div>
-      )}
+              <ErrorDisplay 
+                error={error} 
+                onRetry={fetchLogs}
+                className="mb-4"
+              />
 
-      <div className="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
-        {!Array.isArray(logs) || logs.length === 0 ? (
-          <p className="text-slate-600 text-center py-4">No logs found</p>
-        ) : (
+              <div className="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
+                {!isConnected ? (
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-4">⚠️</div>
+                    <p className="text-slate-600 mb-2">MCP Server Offline</p>
+                    <p className="text-sm text-slate-500">Logs cannot be fetched while the server is offline.</p>
+                  </div>
+                ) : !Array.isArray(logs) || logs.length === 0 ? (
+                  <p className="text-slate-600 text-center py-4">No logs found</p>
+                ) : (
           <div className="space-y-2">
             {logs.map((log, index) => (
               <div key={index} className="bg-white p-3 rounded border">

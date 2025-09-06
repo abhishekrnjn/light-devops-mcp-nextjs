@@ -1,4 +1,5 @@
 import { MCPResource, MCPTool, MCPResponse, LogEntry, MetricEntry, DeploymentResult, RollbackResult } from '@/types/mcp';
+import { parseError, isAuthError } from '@/utils/errorHandler';
 
 const MCP_SERVER_URL = process.env.NEXT_PUBLIC_MCP_SERVER_URL || 'http://localhost:8001';
 
@@ -26,6 +27,8 @@ class MCPService {
       const response = await fetch(url, {
         ...options,
         headers,
+        // Add timeout to detect server offline
+        signal: AbortSignal.timeout(10000), // 10 second timeout
       });
 
       console.log('📡 Response status:', response.status, response.statusText);
@@ -33,7 +36,8 @@ class MCPService {
       if (!response.ok) {
         const error = await response.text();
         console.error('❌ Error response:', error);
-        return { success: false, error };
+        const formattedError = parseError(error);
+        return { success: false, error: formattedError, isAuthError: isAuthError(error) };
       }
 
       const data = await response.json();
@@ -41,9 +45,30 @@ class MCPService {
       return { success: true, data };
     } catch (error) {
       console.error('💥 Request error:', error);
+      
+      // Check if it's a network error (server offline)
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        return { 
+          success: false, 
+          error: 'Unable to connect to MCP server. Please check if the server is running.',
+          isAuthError: false
+        };
+      }
+      
+      // Check if it's a timeout error
+      if (error instanceof Error && error.name === 'TimeoutError') {
+        return { 
+          success: false, 
+          error: 'MCP server request timed out. The server may be slow or offline.',
+          isAuthError: false
+        };
+      }
+      
+      const formattedError = parseError(error);
       return { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+        error: formattedError,
+        isAuthError: isAuthError(error)
       };
     }
   }
@@ -104,9 +129,11 @@ class MCPService {
   async rollbackDeployment(
     token: string, 
     deploymentId: string, 
-    reason: string
+    reason: string,
+    environment: string
   ): Promise<MCPResponse<RollbackResult>> {
-    return this.request<RollbackResult>('/mcp/tools/rollback_deployment', {
+    const endpoint = environment === 'production' ? '/mcp/tools/rollback_production' : '/mcp/tools/rollback_staging';
+    return this.request<RollbackResult>(endpoint, {
       method: 'POST',
       body: JSON.stringify({
         arguments: { deployment_id: deploymentId, reason }

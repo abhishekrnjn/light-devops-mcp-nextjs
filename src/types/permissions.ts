@@ -3,7 +3,8 @@ export interface UserPermissions {
   read_metrics: boolean;
   deploy_staging: boolean;
   deploy_production: boolean;
-  rollback_deployment: boolean;
+  rollback_staging: boolean;
+  rollback_production: boolean;
   authenticate_user: boolean;
 }
 
@@ -17,6 +18,7 @@ export const PERMISSION_MAP: Record<string, keyof UserPermissions> = {
   'metrics': 'read_metrics',
   'deploy_service:staging': 'deploy_staging',
   'deploy_service:production': 'deploy_production',
-  'rollback_deployment': 'rollback_deployment',
+  'rollback_staging': 'rollback_staging',
+  'rollback_production': 'rollback_production',
   'authenticate_user': 'authenticate_user',
 };

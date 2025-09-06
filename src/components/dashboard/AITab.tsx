@@ -5,10 +5,11 @@ import { useJWT } from '@/hooks/useJWT';
 import { useMCPConnection } from '@/hooks/useMCPConnection';
 import { usePermissions } from '@/hooks/usePermissions';
 import { ChatMessage } from '@/types/ai';
+import { parseError, isAuthError } from '@/utils/errorHandler';
 
 export const AITab = () => {
   const { token } = useJWT();
-  const { mcpService, resources, tools } = useMCPConnection();
+  const { mcpService, resources, tools, isConnected } = useMCPConnection();
   const { permissions } = usePermissions();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -28,7 +29,7 @@ export const AITab = () => {
   }, [messages]);
 
   const sendMessage = async () => {
-    if (!input.trim() || !token) return;
+    if (!input.trim() || !token || !isConnected) return;
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -87,7 +88,7 @@ export const AITab = () => {
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        content: `Error: ${parseError(error)}`,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -115,11 +116,20 @@ export const AITab = () => {
               toolCall.arguments.environment as string
             );
             break;
-          case 'rollback_deployment':
+          case 'rollback_staging':
             result = await mcpService.rollbackDeployment(
               token!,
               toolCall.arguments.deployment_id as string,
-              toolCall.arguments.reason as string
+              toolCall.arguments.reason as string,
+              'staging'
+            );
+            break;
+          case 'rollback_production':
+            result = await mcpService.rollbackDeployment(
+              token!,
+              toolCall.arguments.deployment_id as string,
+              toolCall.arguments.reason as string,
+              'production'
             );
             break;
           default:
@@ -137,7 +147,7 @@ export const AITab = () => {
         const errorMessage: ChatMessage = {
           id: `tool-error-${Date.now()}`,
           role: 'assistant',
-          content: `Tool ${toolCall.name} failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          content: `Tool ${toolCall.name} failed: ${parseError(error)}`,
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, errorMessage]);
@@ -221,16 +231,16 @@ export const AITab = () => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Ask about logs, metrics, deployments..."
-          className="flex-1 border border-gray-300 rounded px-3 py-2 text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          disabled={isLoading}
+          placeholder={isConnected ? "Ask about logs, metrics, deployments..." : "MCP Server Offline - AI Assistant unavailable"}
+          className="flex-1 border border-gray-300 rounded px-3 py-2 text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+          disabled={isLoading || !isConnected}
         />
         <button
           onClick={sendMessage}
-          disabled={!input.trim() || isLoading}
+          disabled={!input.trim() || isLoading || !isConnected}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
         >
-          Send
+          {!isConnected ? 'Offline' : 'Send'}
         </button>
       </div>
     </div>

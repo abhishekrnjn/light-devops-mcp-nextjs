@@ -15,6 +15,7 @@ export interface MCPResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
+  isAuthError?: boolean;
 }
 
 export interface LogEntry {

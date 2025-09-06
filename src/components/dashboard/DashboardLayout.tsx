@@ -19,7 +19,7 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout = ({ user, onLogout }: DashboardLayoutProps) => {
   const { getAvailableTabs, isLoading: permissionsLoading } = usePermissions();
-  const { isConnected, isLoading: mcpLoading } = useMCPConnection();
+  const { isConnected, isLoading: mcpLoading, error: mcpError, isAuthError: mcpAuthError, refreshConnection } = useMCPConnection();
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [isClient, setIsClient] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -44,13 +44,20 @@ export const DashboardLayout = ({ user, onLogout }: DashboardLayoutProps) => {
     );
   }
 
-  if (!isConnected) {
+  // Only show full error screen for authentication errors
+  if (mcpAuthError) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-500 to-pink-600">
-        <div className="bg-white p-8 rounded-2xl shadow-xl text-center">
-          <div className="text-4xl mb-4">❌</div>
-          <h1 className="text-2xl font-bold text-slate-800 mb-2">Connection Failed</h1>
-          <p className="text-slate-600">Unable to connect to MCP server</p>
+        <div className="bg-white p-8 rounded-2xl shadow-xl text-center max-w-md">
+          <div className="text-4xl mb-4">🔐</div>
+          <h1 className="text-2xl font-bold text-slate-800 mb-2">Authentication Error</h1>
+          <p className="text-slate-600 mb-4">{mcpError}</p>
+          <button
+            onClick={onLogout}
+            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+          >
+            Log In Again
+          </button>
         </div>
       </div>
     );
@@ -79,6 +86,7 @@ export const DashboardLayout = ({ user, onLogout }: DashboardLayoutProps) => {
         user={user}
         onLogout={onLogout}
         onMobileMenuToggle={() => setIsMobileSidebarOpen(true)}
+        onRefreshConnection={refreshConnection}
       />
     </div>
   );

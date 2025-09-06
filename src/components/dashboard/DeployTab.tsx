@@ -5,10 +5,11 @@ import { useJWT } from '@/hooks/useJWT';
 import { useMCPConnection } from '@/hooks/useMCPConnection';
 import { usePermissions } from '@/hooks/usePermissions';
 import { DeploymentResult } from '@/types/mcp';
+import { ErrorDisplay } from '@/components/common/ErrorDisplay';
 
 export const DeployTab = () => {
   const { token } = useJWT();
-  const { mcpService } = useMCPConnection();
+  const { mcpService, isConnected } = useMCPConnection();
   const { canAccessTool } = usePermissions();
   const [formData, setFormData] = useState({
     serviceName: '',
@@ -18,6 +19,7 @@ export const DeployTab = () => {
   const [result, setResult] = useState<DeploymentResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthError, setIsAuthError] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -26,10 +28,11 @@ export const DeployTab = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
+    if (!token || !isConnected) return;
 
     setIsLoading(true);
     setError(null);
+    setIsAuthError(false);
     setResult(null);
 
     try {
@@ -44,9 +47,11 @@ export const DeployTab = () => {
         setResult(response.data!);
       } else {
         setError(response.error || 'Deployment failed');
+        setIsAuthError(response.isAuthError || false);
       }
     } catch {
       setError('Deployment failed');
+      setIsAuthError(false);
     } finally {
       setIsLoading(false);
     }
@@ -132,18 +137,18 @@ export const DeployTab = () => {
 
         <button
           type="submit"
-          disabled={isLoading || !canDeployToEnvironment(formData.environment)}
+          disabled={isLoading || !canDeployToEnvironment(formData.environment) || !isConnected}
           className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? 'Deploying...' : 'Deploy Service'}
+          {isLoading ? 'Deploying...' : !isConnected ? 'MCP Server Offline' : 'Deploy Service'}
         </button>
       </form>
 
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error}
-        </div>
-      )}
+      <ErrorDisplay 
+        error={error} 
+        onRetry={() => handleSubmit(new Event('submit') as any)}
+        className="mb-4"
+      />
 
       {result && (
         <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">

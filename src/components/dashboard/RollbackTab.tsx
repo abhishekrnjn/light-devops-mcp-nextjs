@@ -3,18 +3,23 @@
 import { useState, useEffect } from 'react';
 import { useJWT } from '@/hooks/useJWT';
 import { useMCPConnection } from '@/hooks/useMCPConnection';
+import { usePermissions } from '@/hooks/usePermissions';
 import { RollbackResult } from '@/types/mcp';
+import { ErrorDisplay } from '@/components/common/ErrorDisplay';
 
 export const RollbackTab = () => {
   const { token } = useJWT();
-  const { mcpService } = useMCPConnection();
+  const { mcpService, isConnected } = useMCPConnection();
+  const { canAccessTool } = usePermissions();
   const [formData, setFormData] = useState({
     deploymentId: '',
     reason: '',
+    environment: 'staging',
   });
   const [result, setResult] = useState<RollbackResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthError, setIsAuthError] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -23,29 +28,37 @@ export const RollbackTab = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
+    if (!token || !isConnected) return;
 
     setIsLoading(true);
     setError(null);
+    setIsAuthError(false);
     setResult(null);
 
     try {
       const response = await mcpService.rollbackDeployment(
         token,
         formData.deploymentId,
-        formData.reason
+        formData.reason,
+        formData.environment
       );
 
       if (response.success) {
         setResult(response.data!);
       } else {
         setError(response.error || 'Rollback failed');
+        setIsAuthError(response.isAuthError || false);
       }
     } catch {
       setError('Rollback failed');
+      setIsAuthError(false);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const canRollbackToEnvironment = (env: string) => {
+    return canAccessTool(env === 'production' ? 'rollback_production' : 'rollback_staging');
   };
 
   if (!isClient) {
@@ -88,6 +101,24 @@ export const RollbackTab = () => {
 
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
+            Environment
+          </label>
+          <select
+            value={formData.environment}
+            onChange={(e) => setFormData({ ...formData, environment: e.target.value })}
+            className="w-full border border-gray-300 rounded px-3 py-2 text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="staging" disabled={!canRollbackToEnvironment('staging')}>
+              Staging {!canRollbackToEnvironment('staging') && '(No Permission)'}
+            </option>
+            <option value="production" disabled={!canRollbackToEnvironment('production')}>
+              Production {!canRollbackToEnvironment('production') && '(No Permission)'}
+            </option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             Reason
           </label>
           <textarea
@@ -102,18 +133,18 @@ export const RollbackTab = () => {
 
         <button
           type="submit"
-          disabled={isLoading}
-          className="w-full bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 disabled:opacity-50"
+          disabled={isLoading || !canRollbackToEnvironment(formData.environment) || !isConnected}
+          className="w-full bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? 'Rolling back...' : 'Rollback Deployment'}
+          {isLoading ? 'Rolling back...' : !isConnected ? 'MCP Server Offline' : `Rollback ${formData.environment === 'production' ? 'Production' : 'Staging'} Deployment`}
         </button>
       </form>
 
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error}
-        </div>
-      )}
+      <ErrorDisplay 
+        error={error} 
+        onRetry={() => handleSubmit(new Event('submit') as any)}
+        className="mb-4"
+      />
 
       {result && (
         <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">

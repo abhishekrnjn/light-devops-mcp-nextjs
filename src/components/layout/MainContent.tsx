@@ -19,9 +19,12 @@ interface MainContentProps {
   } | null;
   onLogout: () => void;
   onMobileMenuToggle?: () => void;
+  onRefreshConnection?: () => void;
 }
 
-export const MainContent = ({ activeTab, user, onLogout, onMobileMenuToggle }: MainContentProps) => {
+export const MainContent = ({ activeTab, user, onLogout, onMobileMenuToggle, onRefreshConnection }: MainContentProps) => {
+  const { isConnected, error: mcpError } = useMCPConnection();
+  
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview':
@@ -88,6 +91,36 @@ export const MainContent = ({ activeTab, user, onLogout, onMobileMenuToggle }: M
         </div>
       </header>
 
+      {/* MCP Server Offline Warning */}
+      {!isConnected && mcpError && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <span className="text-yellow-400 text-xl">⚠️</span>
+            </div>
+            <div className="ml-3 flex-1">
+              <h3 className="text-sm font-medium text-yellow-800">
+                MCP Server Offline
+              </h3>
+              <div className="mt-2 text-sm text-yellow-700">
+                <p>{mcpError}</p>
+                <p className="mt-1">Some features may be limited. You can still view the dashboard and your permissions.</p>
+              </div>
+            </div>
+            {onRefreshConnection && (
+              <div className="flex-shrink-0 ml-4">
+                <button
+                  onClick={onRefreshConnection}
+                  className="px-3 py-1 text-xs font-medium text-yellow-800 bg-yellow-100 rounded hover:bg-yellow-200 transition-colors"
+                >
+                  Retry Connection
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
       <main className="flex-1 p-6">
         <div className="max-w-7xl mx-auto">
@@ -106,7 +139,8 @@ const OverviewTab = () => {
   const canReadMetrics = hasPermission('read_metrics');
   const canDeployStaging = hasPermission('deploy_staging');
   const canDeployProduction = hasPermission('deploy_production');
-  const canRollback = hasPermission('rollback_deployment');
+  const canRollbackStaging = hasPermission('rollback_staging');
+  const canRollbackProduction = hasPermission('rollback_production');
 
   return (
     <div className="space-y-6">
@@ -251,7 +285,7 @@ const OverviewTab = () => {
             <span className="text-2xl">↩️</span>
             <h3 className="text-lg font-semibold text-slate-900">Rollback Deployments</h3>
           </div>
-          {!canRollback ? (
+          {!canRollbackStaging && !canRollbackProduction ? (
             <PermissionMessage 
               feature="rollbacks"
               description="Rollback deployments to previous versions when issues occur"
@@ -261,7 +295,11 @@ const OverviewTab = () => {
               <p className="text-slate-600">Quickly rollback deployments to previous versions when issues are detected.</p>
               <div className="bg-red-50 p-3 rounded-lg">
                 <p className="text-sm text-red-800">
-                  <strong>Available:</strong> Emergency rollbacks with reason tracking.
+                  <strong>Available:</strong> 
+                  {canRollbackStaging && ' Staging'}
+                  {canRollbackStaging && canRollbackProduction && ' &'}
+                  {canRollbackProduction && ' Production'}
+                  {' rollbacks with reason tracking.'}
                 </p>
               </div>
             </div>
