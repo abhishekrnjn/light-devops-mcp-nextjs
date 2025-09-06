@@ -5,6 +5,10 @@ import { MetricsTab } from '@/components/dashboard/MetricsTab';
 import { DeployTab } from '@/components/dashboard/DeployTab';
 import { RollbackTab } from '@/components/dashboard/RollbackTab';
 import { AITab } from '@/components/dashboard/AITab';
+import { useJWT } from '@/hooks/useJWT';
+import { useMCPConnection } from '@/hooks/useMCPConnection';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useState, useEffect } from 'react';
 
 interface MainContentProps {
   activeTab: string;
@@ -53,10 +57,10 @@ export const MainContent = ({ activeTab, user, onLogout, onMobileMenuToggle }: M
               </button>
               
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 capitalize">
+                <h2 className="text-2xl font-bold text-slate-900 capitalize">
                   {activeTab === 'overview' ? 'Dashboard Overview' : activeTab}
                 </h2>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-slate-600 mt-1">
                   {getTabDescription(activeTab)}
                 </p>
               </div>
@@ -65,10 +69,10 @@ export const MainContent = ({ activeTab, user, onLogout, onMobileMenuToggle }: M
             {/* User Info & Actions */}
             <div className="flex items-center space-x-4">
               <div className="text-right">
-                <div className="text-sm font-medium text-gray-900">
+                <div className="text-sm font-medium text-slate-900">
                   {user?.name || user?.email || 'User'}
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-slate-600">
                   {user?.email && user?.name ? user.email : 'DevOps User'}
                 </div>
               </div>
@@ -95,6 +99,15 @@ export const MainContent = ({ activeTab, user, onLogout, onMobileMenuToggle }: M
 };
 
 const OverviewTab = () => {
+  const { hasPermission } = usePermissions();
+  const { isConnected } = useMCPConnection();
+
+  const canReadLogs = hasPermission('read_logs');
+  const canReadMetrics = hasPermission('read_metrics');
+  const canDeployStaging = hasPermission('deploy_staging');
+  const canDeployProduction = hasPermission('deploy_production');
+  const canRollback = hasPermission('rollback_deployment');
+
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
@@ -110,14 +123,30 @@ const OverviewTab = () => {
         </div>
       </div>
 
+      {/* Connection Status */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center space-x-3">
+          <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+          <h3 className="text-lg font-semibold text-slate-900">
+            {isConnected ? 'MCP Server Connected' : 'MCP Server Disconnected'}
+          </h3>
+        </div>
+        <p className="text-slate-600 mt-2">
+          {isConnected 
+            ? 'All systems are operational and ready for DevOps operations.' 
+            : 'Unable to connect to MCP server. Please check your connection and try again.'
+          }
+        </p>
+      </div>
+
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="System Health"
-          value="99.9%"
+          value={isConnected ? "99.9%" : "Offline"}
           icon="💚"
-          color="text-green-600"
-          bgColor="bg-green-50"
+          color={isConnected ? "text-green-600" : "text-red-600"}
+          bgColor={isConnected ? "bg-green-50" : "bg-red-50"}
         />
         <StatCard
           title="Active Services"
@@ -142,31 +171,117 @@ const OverviewTab = () => {
         />
       </div>
 
-      {/* Recent Activity */}
+      {/* Available Features */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Logs Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center space-x-3 mb-4">
+            <span className="text-2xl">📋</span>
+            <h3 className="text-lg font-semibold text-slate-900">System Logs</h3>
+          </div>
+          {!canReadLogs ? (
+            <PermissionMessage 
+              feature="logs"
+              description="View recent system logs and error messages"
+            />
+          ) : (
+            <div className="space-y-3">
+              <p className="text-slate-600">Monitor system logs in real-time to track errors, warnings, and system events.</p>
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>Available:</strong> View logs, filter by level, and search through log entries.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Metrics Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center space-x-3 mb-4">
+            <span className="text-2xl">📈</span>
+            <h3 className="text-lg font-semibold text-slate-900">System Metrics</h3>
+          </div>
+          {!canReadMetrics ? (
+            <PermissionMessage 
+              feature="metrics"
+              description="View system performance metrics and statistics"
+            />
+          ) : (
+            <div className="space-y-3">
+              <p className="text-slate-600">Track system performance with real-time metrics and statistics.</p>
+              <div className="bg-green-50 p-3 rounded-lg">
+                <p className="text-sm text-green-800">
+                  <strong>Available:</strong> CPU usage, memory consumption, response times, and more.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Deploy Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center space-x-3 mb-4">
+            <span className="text-2xl">🚀</span>
+            <h3 className="text-lg font-semibold text-slate-900">Deploy Services</h3>
+          </div>
+          {!canDeployStaging && !canDeployProduction ? (
+            <PermissionMessage 
+              feature="deployments"
+              description="Deploy new versions of your services to staging and production"
+            />
+          ) : (
+            <div className="space-y-3">
+              <p className="text-slate-600">Deploy new versions of your services to different environments.</p>
+              <div className="bg-orange-50 p-3 rounded-lg">
+                <p className="text-sm text-orange-800">
+                  <strong>Available:</strong> 
+                  {canDeployStaging && ' Staging'}
+                  {canDeployStaging && canDeployProduction && ' &'}
+                  {canDeployProduction && ' Production'}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Rollback Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center space-x-3 mb-4">
+            <span className="text-2xl">↩️</span>
+            <h3 className="text-lg font-semibold text-slate-900">Rollback Deployments</h3>
+          </div>
+          {!canRollback ? (
+            <PermissionMessage 
+              feature="rollbacks"
+              description="Rollback deployments to previous versions when issues occur"
+            />
+          ) : (
+            <div className="space-y-3">
+              <p className="text-slate-600">Quickly rollback deployments to previous versions when issues are detected.</p>
+              <div className="bg-red-50 p-3 rounded-lg">
+                <p className="text-sm text-red-800">
+                  <strong>Available:</strong> Emergency rollbacks with reason tracking.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* AI Assistant Section */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+        <div className="flex items-center space-x-3 mb-4">
+          <span className="text-2xl">🤖</span>
+          <h3 className="text-lg font-semibold text-slate-900">AI Assistant</h3>
+        </div>
         <div className="space-y-3">
-          <ActivityItem
-            icon="🚀"
-            title="Service deployed"
-            description="user-service v2.1.0 to production"
-            time="2 minutes ago"
-            status="success"
-          />
-          <ActivityItem
-            icon="📊"
-            title="Metrics updated"
-            description="CPU usage: 45%, Memory: 67%"
-            time="5 minutes ago"
-            status="info"
-          />
-          <ActivityItem
-            icon="🤖"
-            title="AI query processed"
-            description="Analyzed deployment logs"
-            time="8 minutes ago"
-            status="info"
-          />
+          <p className="text-slate-600">Get AI-powered assistance for your DevOps operations and troubleshooting.</p>
+          <div className="bg-purple-50 p-3 rounded-lg">
+            <p className="text-sm text-purple-800">
+              <strong>Available:</strong> Ask questions about logs, metrics, deployments, and get intelligent insights.
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -183,7 +298,7 @@ const StatCard = ({ title, value, icon, color, bgColor }: {
   <div className={`${bgColor} rounded-xl p-6`}>
     <div className="flex items-center justify-between">
       <div>
-        <p className="text-sm font-medium text-gray-600">{title}</p>
+        <p className="text-sm font-medium text-slate-700">{title}</p>
         <p className={`text-2xl font-bold ${color} mt-1`}>{value}</p>
       </div>
       <div className="text-3xl">{icon}</div>
@@ -209,13 +324,31 @@ const ActivityItem = ({ icon, title, description, time, status }: {
     <div className="flex items-start space-x-3">
       <div className="text-xl">{icon}</div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900">{title}</p>
-        <p className="text-sm text-gray-500">{description}</p>
+        <p className="text-sm font-medium text-slate-900">{title}</p>
+        <p className="text-sm text-slate-600">{description}</p>
         <p className={`text-xs ${statusColors[status]} mt-1`}>{time}</p>
       </div>
     </div>
   );
 };
+
+const PermissionMessage = ({ feature, description }: { feature: string; description: string }) => (
+  <div className="text-center py-8 bg-amber-50 border border-amber-200 rounded-lg">
+    <div className="text-4xl mb-4">🔒</div>
+    <h4 className="text-lg font-semibold text-amber-800 mb-2">Access Restricted</h4>
+    <p className="text-amber-700 mb-2">
+      You don't have permission to view {feature}.
+    </p>
+    <p className="text-sm text-amber-600">
+      {description}
+    </p>
+    <div className="mt-4 p-3 bg-amber-100 rounded-lg">
+      <p className="text-sm text-amber-800">
+        <strong>Need access?</strong> Please contact your system administrator to request permission for viewing {feature}.
+      </p>
+    </div>
+  </div>
+);
 
 const getTabDescription = (tab: string): string => {
   const descriptions: Record<string, string> = {

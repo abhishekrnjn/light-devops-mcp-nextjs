@@ -53,7 +53,7 @@ export const MetricsTab = () => {
     return (
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">System Metrics</h3>
+          <h3 className="text-lg font-semibold text-slate-900">System Metrics</h3>
           <div className="px-4 py-2 bg-gray-300 text-white rounded">
             Loading...
           </div>
@@ -75,14 +75,14 @@ export const MetricsTab = () => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">System Metrics</h3>
+        <h3 className="text-lg font-semibold text-slate-900">System Metrics</h3>
         <div className="flex space-x-2">
           <input
             type="number"
             value={limit}
             onChange={(e) => setLimit(parseInt(e.target.value) || 20)}
             placeholder="Limit"
-            className="border border-gray-300 rounded px-3 py-2 w-20"
+            className="border border-gray-300 rounded px-3 py-2 w-20 text-slate-700 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
           <button
             onClick={fetchMetrics}
@@ -104,8 +104,8 @@ export const MetricsTab = () => {
         {Array.isArray(metrics) && metrics.map((metric, index) => (
           <div key={index} className="bg-white p-4 rounded-lg border shadow-sm">
             <div className="flex items-center justify-between mb-2">
-              <h4 className="font-medium text-gray-900">{metric.name}</h4>
-              <span className="text-xs text-gray-500">{metric.timestamp}</span>
+              <h4 className="font-medium text-slate-900">{metric.name}</h4>
+              <span className="text-xs text-slate-600">{metric.timestamp}</span>
             </div>
             <div className="text-2xl font-bold text-blue-600">
               {metric.value} {metric.unit || ''}
@@ -116,7 +116,7 @@ export const MetricsTab = () => {
 
       {(!Array.isArray(metrics) || metrics.length === 0) && !isLoading && (
         <div className="text-center py-8">
-          <p className="text-gray-500">No metrics available</p>
+          <p className="text-slate-600">No metrics available</p>
         </div>
       )}
     </div>

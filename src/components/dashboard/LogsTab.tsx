@@ -54,7 +54,7 @@ export const LogsTab = () => {
       case 'ERROR': return 'text-red-600 bg-red-100';
       case 'WARN': return 'text-yellow-600 bg-yellow-100';
       case 'INFO': return 'text-blue-600 bg-blue-100';
-      default: return 'text-gray-600 bg-gray-100';
+      default: return 'text-slate-700 bg-slate-100';
     }
   };
 
@@ -62,7 +62,7 @@ export const LogsTab = () => {
     return (
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">System Logs</h3>
+          <h3 className="text-lg font-semibold text-slate-900">System Logs</h3>
           <div className="px-4 py-2 bg-gray-300 text-white rounded">
             Loading...
           </div>
@@ -70,7 +70,7 @@ export const LogsTab = () => {
         <div className="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <p className="text-gray-500">Loading logs...</p>
+            <p className="text-slate-600">Loading logs...</p>
           </div>
         </div>
       </div>
@@ -80,7 +80,7 @@ export const LogsTab = () => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">System Logs</h3>
+        <h3 className="text-lg font-semibold text-slate-900">System Logs</h3>
         <button
           onClick={fetchLogs}
           disabled={isLoading}
@@ -94,7 +94,7 @@ export const LogsTab = () => {
         <select
           value={filters.level}
           onChange={(e) => setFilters({ ...filters, level: e.target.value })}
-          className="border border-gray-300 rounded px-3 py-2"
+          className="border border-gray-300 rounded px-3 py-2 text-slate-700 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
           <option value="">All Levels</option>
           <option value="ERROR">Error</option>
@@ -106,7 +106,7 @@ export const LogsTab = () => {
           value={filters.limit}
           onChange={(e) => setFilters({ ...filters, limit: parseInt(e.target.value) || 10 })}
           placeholder="Limit"
-          className="border border-gray-300 rounded px-3 py-2 w-20"
+          className="border border-gray-300 rounded px-3 py-2 w-20 text-slate-700 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
 
@@ -118,7 +118,7 @@ export const LogsTab = () => {
 
       <div className="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
         {!Array.isArray(logs) || logs.length === 0 ? (
-          <p className="text-gray-500 text-center py-4">No logs found</p>
+          <p className="text-slate-600 text-center py-4">No logs found</p>
         ) : (
           <div className="space-y-2">
             {logs.map((log, index) => (
@@ -127,10 +127,10 @@ export const LogsTab = () => {
                   <span className={`px-2 py-1 rounded text-xs font-medium ${getLevelColor(log.level)}`}>
                     {log.level}
                   </span>
-                  <span className="text-xs text-gray-500">{log.timestamp}</span>
+                  <span className="text-xs text-slate-600">{log.timestamp}</span>
                 </div>
-                <p className="text-sm text-gray-800">{log.message}</p>
-                <p className="text-xs text-gray-500 mt-1">Source: {log.source}</p>
+                <p className="text-sm text-slate-800">{log.message}</p>
+                <p className="text-xs text-slate-600 mt-1">Source: {log.source}</p>
               </div>
             ))}
           </div>

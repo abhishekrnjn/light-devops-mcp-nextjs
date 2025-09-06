@@ -59,7 +59,7 @@ export const DeployTab = () => {
   if (!isClient) {
     return (
       <div className="space-y-6">
-        <h3 className="text-lg font-semibold">Deploy Service</h3>
+        <h3 className="text-lg font-semibold text-slate-900">Deploy Service</h3>
         <div className="space-y-4">
           <div className="animate-pulse">
             <div className="h-4 bg-gray-200 rounded mb-2 w-1/4"></div>
@@ -81,11 +81,11 @@ export const DeployTab = () => {
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold">Deploy Service</h3>
+      <h3 className="text-lg font-semibold text-slate-900">Deploy Service</h3>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             Service Name
           </label>
           <input
@@ -93,13 +93,13 @@ export const DeployTab = () => {
             value={formData.serviceName}
             onChange={(e) => setFormData({ ...formData, serviceName: e.target.value })}
             required
-            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded px-3 py-2 text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="my-service"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             Version
           </label>
           <input
@@ -107,19 +107,19 @@ export const DeployTab = () => {
             value={formData.version}
             onChange={(e) => setFormData({ ...formData, version: e.target.value })}
             required
-            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded px-3 py-2 text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="1.0.0"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             Environment
           </label>
           <select
             value={formData.environment}
             onChange={(e) => setFormData({ ...formData, environment: e.target.value })}
-            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded px-3 py-2 text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="staging" disabled={!canDeployToEnvironment('staging')}>
               Staging {!canDeployToEnvironment('staging') && '(No Permission)'}

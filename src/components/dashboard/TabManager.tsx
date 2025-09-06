@@ -25,8 +25,8 @@ export const TabManager = ({ tabs, activeTab, onTabChange }: TabManagerProps) =>
       return (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">⏳</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Loading...</h2>
-          <p className="text-gray-600">Please wait</p>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">Loading...</h2>
+          <p className="text-slate-600">Please wait</p>
         </div>
       );
     }
@@ -46,8 +46,8 @@ export const TabManager = ({ tabs, activeTab, onTabChange }: TabManagerProps) =>
         return (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🚀</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to DevOps Dashboard</h2>
-            <p className="text-gray-600">Select a tab to get started</p>
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">Welcome to DevOps Dashboard</h2>
+            <p className="text-slate-600">Select a tab to get started</p>
           </div>
         );
     }
@@ -64,7 +64,7 @@ export const TabManager = ({ tabs, activeTab, onTabChange }: TabManagerProps) =>
               className={`py-4 px-1 border-b-2 font-medium text-sm capitalize ${
                 activeTab === tab
                   ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'border-transparent text-slate-600 hover:text-slate-800 hover:border-gray-300'
               }`}
             >
               {tab}

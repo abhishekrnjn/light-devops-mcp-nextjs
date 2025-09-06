@@ -62,7 +62,14 @@ class MCPService {
     if (limit) params.append('limit', limit.toString());
     
     const query = params.toString();
-    return this.request<LogEntry[]>(`/mcp/resources/logs${query ? `?${query}` : ''}`, { method: 'GET' }, token);
+    const response = await this.request<any>(`/mcp/resources/logs${query ? `?${query}` : ''}`, { method: 'GET' }, token);
+    
+    // Extract the data array from the backend response
+    if (response.success && response.data?.data) {
+      return { success: true, data: response.data.data };
+    }
+    
+    return response;
   }
 
   async getMetrics(token: string, limit?: number): Promise<MCPResponse<MetricEntry[]>> {
@@ -70,7 +77,14 @@ class MCPService {
     if (limit) params.append('limit', limit.toString());
     
     const query = params.toString();
-    return this.request<MetricEntry[]>(`/mcp/resources/metrics${query ? `?${query}` : ''}`, { method: 'GET' }, token);
+    const response = await this.request<any>(`/mcp/resources/metrics${query ? `?${query}` : ''}`, { method: 'GET' }, token);
+    
+    // Extract the data array from the backend response
+    if (response.success && response.data?.data) {
+      return { success: true, data: response.data.data };
+    }
+    
+    return response;
   }
 
   async deployService(

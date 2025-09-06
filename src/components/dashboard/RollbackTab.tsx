@@ -51,7 +51,7 @@ export const RollbackTab = () => {
   if (!isClient) {
     return (
       <div className="space-y-6">
-        <h3 className="text-lg font-semibold">Rollback Deployment</h3>
+        <h3 className="text-lg font-semibold text-slate-900">Rollback Deployment</h3>
         <div className="space-y-4">
           <div className="animate-pulse">
             <div className="h-4 bg-gray-200 rounded mb-2 w-1/4"></div>
@@ -69,11 +69,11 @@ export const RollbackTab = () => {
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold">Rollback Deployment</h3>
+      <h3 className="text-lg font-semibold text-slate-900">Rollback Deployment</h3>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             Deployment ID
           </label>
           <input
@@ -81,13 +81,13 @@ export const RollbackTab = () => {
             value={formData.deploymentId}
             onChange={(e) => setFormData({ ...formData, deploymentId: e.target.value })}
             required
-            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded px-3 py-2 text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="deploy-123"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             Reason
           </label>
           <textarea
@@ -95,7 +95,7 @@ export const RollbackTab = () => {
             onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
             required
             rows={3}
-            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded px-3 py-2 text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Critical bug found in production"
           />
         </div>

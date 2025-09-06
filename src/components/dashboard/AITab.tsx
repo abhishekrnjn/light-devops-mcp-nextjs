@@ -154,11 +154,11 @@ export const AITab = () => {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold">AI Assistant</h3>
+      <h3 className="text-lg font-semibold text-slate-900">AI Assistant</h3>
       
       <div className="bg-gray-50 rounded-lg p-4 h-96 overflow-y-auto">
         {messages.length === 0 ? (
-          <div className="text-center text-gray-500 py-8">
+          <div className="text-center text-slate-600 py-8">
             <div className="text-4xl mb-2">🤖</div>
             <p>Ask me anything about your DevOps operations!</p>
             <p className="text-sm mt-2">I can help you with logs, metrics, deployments, and more.</p>
@@ -188,7 +188,7 @@ export const AITab = () => {
                   className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                     message.role === 'user'
                       ? 'bg-blue-500 text-white'
-                      : 'bg-white text-gray-800 border'
+                      : 'bg-white text-slate-800 border'
                   }`}
                 >
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
@@ -202,7 +202,7 @@ export const AITab = () => {
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-white text-gray-800 border px-4 py-2 rounded-lg">
+                <div className="bg-white text-slate-800 border px-4 py-2 rounded-lg">
                   <div className="flex items-center space-x-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
                     <span>Thinking...</span>
@@ -222,7 +222,7 @@ export const AITab = () => {
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder="Ask about logs, metrics, deployments..."
-          className="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 border border-gray-300 rounded px-3 py-2 text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           disabled={isLoading}
         />
         <button

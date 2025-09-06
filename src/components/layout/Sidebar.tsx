@@ -81,7 +81,7 @@ export const Sidebar = ({ activeTab, onTabChange, isCollapsed, onToggleCollapse,
   ];
 
   const filteredMenuItems = isClient 
-    ? menuItems.filter(item => !item.permission || hasPermission(item.permission))
+    ? menuItems.filter(item => !item.permission || hasPermission(item.permission as keyof import('@/types/permissions').UserPermissions))
     : [];
 
   if (!isClient) {
@@ -125,13 +125,13 @@ export const Sidebar = ({ activeTab, onTabChange, isCollapsed, onToggleCollapse,
         <div className="flex items-center justify-between">
           {!isCollapsed && (
             <div>
-              <h1 className="text-xl font-bold text-gray-900">DevOps</h1>
-              <p className="text-sm text-gray-500">Dashboard</p>
+              <h1 className="text-xl font-bold text-slate-900">DevOps</h1>
+              <p className="text-sm text-slate-600">Dashboard</p>
             </div>
           )}
           <button
             onClick={onToggleCollapse}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-slate-700 hover:text-slate-900"
           >
             <span className="text-lg">
               {isCollapsed ? '→' : '←'}
@@ -141,10 +141,13 @@ export const Sidebar = ({ activeTab, onTabChange, isCollapsed, onToggleCollapse,
         
         {/* Connection Status */}
         <div className={`mt-3 flex items-center space-x-2 ${isCollapsed ? 'justify-center' : ''}`}>
-          <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+          <div 
+            className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
+            title={isConnected ? 'MCP Server is online and responding' : 'MCP Server is offline or unreachable'}
+          ></div>
           {!isCollapsed && (
-            <span className="text-xs text-gray-500">
-              {isConnected ? 'Connected' : 'Disconnected'}
+            <span className="text-xs text-slate-600">
+              {isConnected ? 'MCP Server Connected' : 'MCP Server Disconnected'}
             </span>
           )}
         </div>
@@ -159,7 +162,7 @@ export const Sidebar = ({ activeTab, onTabChange, isCollapsed, onToggleCollapse,
             className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 group ${
               activeTab === item.id
                 ? `${item.color} shadow-sm`
-                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                : 'text-slate-700 hover:bg-gray-50 hover:text-slate-900'
             }`}
             title={isCollapsed ? item.description : undefined}
           >
@@ -180,7 +183,7 @@ export const Sidebar = ({ activeTab, onTabChange, isCollapsed, onToggleCollapse,
       {/* Footer */}
       <div className="p-4 border-t border-gray-200">
         {!isCollapsed && (
-          <div className="text-xs text-gray-500 text-center">
+          <div className="text-xs text-slate-600 text-center">
             <p>Powered by MCP</p>
             <p className="mt-1">v1.0.0</p>
           </div>
