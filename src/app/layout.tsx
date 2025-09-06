@@ -19,8 +19,22 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const projectId = process.env.NEXT_PUBLIC_DESCOPE_PROJECT_ID;
+  const baseUrl = process.env.NEXT_PUBLIC_DESCOPE_BASE_URL || 'https://api.descope.com';
+
+  if (!projectId) {
+    throw new Error('NEXT_PUBLIC_DESCOPE_PROJECT_ID environment variable is required');
+  }
+
   return (
-    <AuthProvider projectId="P32IDP9Hdywv6N4G6REYR2uddVc3">
+    <AuthProvider
+      projectId={projectId}
+      baseUrl={baseUrl}
+      persistTokens={true}
+      sessionTokenViaCookie={false}
+      storeLastAuthenticatedUser={true}
+      keepLastAuthenticatedUserAfterLogout={false}
+    >
       <html lang="en">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
           {children}

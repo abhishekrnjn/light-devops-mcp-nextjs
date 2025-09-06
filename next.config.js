@@ -1,9 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Disable React StrictMode to prevent double mounting of components
-  // This is necessary for Descope authentication component to work properly
-  reactStrictMode: false,
-  
   // Suppress hydration warnings in development for browser extension attributes
   onDemandEntries: {
     // period (in ms) where the server will keep pages in the buffer
