@@ -91,35 +91,6 @@ export const MainContent = ({ activeTab, user, onLogout, onMobileMenuToggle, onR
         </div>
       </header>
 
-      {/* MCP Server Offline Warning */}
-      {!isConnected && mcpError && (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <span className="text-yellow-400 text-xl">⚠️</span>
-            </div>
-            <div className="ml-3 flex-1">
-              <h3 className="text-sm font-medium text-yellow-800">
-                MCP Server Offline
-              </h3>
-              <div className="mt-2 text-sm text-yellow-700">
-                <p>{mcpError}</p>
-                <p className="mt-1">Some features may be limited. You can still view the dashboard and your permissions.</p>
-              </div>
-            </div>
-            {onRefreshConnection && (
-              <div className="flex-shrink-0 ml-4">
-                <button
-                  onClick={onRefreshConnection}
-                  className="px-3 py-1 text-xs font-medium text-yellow-800 bg-yellow-100 rounded hover:bg-yellow-200 transition-colors"
-                >
-                  Retry Connection
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Main Content */}
       <main className="flex-1 p-6">
@@ -168,53 +139,7 @@ const OverviewTab = ({ user }: { user: { name?: string; email?: string; userId?:
         </div>
       </div>
 
-      {/* Connection Status */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center space-x-3">
-          <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-          <h3 className="text-lg font-semibold text-slate-900">
-            {isConnected ? 'MCP Server Connected' : 'MCP Server Disconnected'}
-          </h3>
-        </div>
-        <p className="text-slate-600 mt-2">
-          {isConnected 
-            ? 'All systems are operational and ready for DevOps operations.' 
-            : 'Unable to connect to MCP server. Please check your connection and try again.'
-          }
-        </p>
-      </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="System Health"
-          value={isConnected ? "99.9%" : "Offline"}
-          icon="💚"
-          color={isConnected ? "text-green-600" : "text-red-600"}
-          bgColor={isConnected ? "bg-green-50" : "bg-red-50"}
-        />
-        <StatCard
-          title="Active Services"
-          value="12"
-          icon="⚙️"
-          color="text-blue-600"
-          bgColor="bg-blue-50"
-        />
-        <StatCard
-          title="Deployments"
-          value="47"
-          icon="🚀"
-          color="text-orange-600"
-          bgColor="bg-orange-50"
-        />
-        <StatCard
-          title="AI Queries"
-          value="156"
-          icon="🤖"
-          color="text-purple-600"
-          bgColor="bg-purple-50"
-        />
-      </div>
 
       {/* Available Features */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -232,9 +157,9 @@ const OverviewTab = ({ user }: { user: { name?: string; email?: string; userId?:
           ) : (
             <div className="space-y-3">
               <p className="text-slate-600">Monitor system logs in real-time to track errors, warnings, and system events.</p>
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  <strong>Available:</strong> View logs, filter by level, and search through log entries.
+              <div className={`p-3 rounded-lg ${canReadLogs ? 'bg-green-50' : 'bg-gray-50'}`}>
+                <p className={`text-sm ${canReadLogs ? 'text-green-800' : 'text-gray-600'}`}>
+                  <strong>Scopes Available:</strong> View logs, filter by level, and search through log entries.
                 </p>
               </div>
             </div>
@@ -255,9 +180,9 @@ const OverviewTab = ({ user }: { user: { name?: string; email?: string; userId?:
           ) : (
             <div className="space-y-3">
               <p className="text-slate-600">Track system performance with real-time metrics and statistics.</p>
-              <div className="bg-green-50 p-3 rounded-lg">
-                <p className="text-sm text-green-800">
-                  <strong>Available:</strong> CPU usage, memory consumption, response times, and more.
+              <div className={`p-3 rounded-lg ${canReadMetrics ? 'bg-green-50' : 'bg-gray-50'}`}>
+                <p className={`text-sm ${canReadMetrics ? 'text-green-800' : 'text-gray-600'}`}>
+                  <strong>Scopes Available:</strong> CPU usage, memory consumption, response times, and more.
                 </p>
               </div>
             </div>
@@ -278,9 +203,9 @@ const OverviewTab = ({ user }: { user: { name?: string; email?: string; userId?:
           ) : (
             <div className="space-y-3">
               <p className="text-slate-600">Deploy new versions of your services to different environments.</p>
-              <div className="bg-orange-50 p-3 rounded-lg">
-                <p className="text-sm text-orange-800">
-                  <strong>Available:</strong> 
+              <div className={`p-3 rounded-lg ${(canDeployStaging || canDeployProduction) ? 'bg-green-50' : 'bg-gray-50'}`}>
+                <p className={`text-sm ${(canDeployStaging || canDeployProduction) ? 'text-green-800' : 'text-gray-600'}`}>
+                  <strong>Scopes Available:</strong> 
                   {canDeployStaging && ' Staging'}
                   {canDeployStaging && canDeployProduction && ' &'}
                   {canDeployProduction && ' Production'}
@@ -304,9 +229,9 @@ const OverviewTab = ({ user }: { user: { name?: string; email?: string; userId?:
           ) : (
             <div className="space-y-3">
               <p className="text-slate-600">Quickly rollback deployments to previous versions when issues are detected.</p>
-              <div className="bg-red-50 p-3 rounded-lg">
-                <p className="text-sm text-red-800">
-                  <strong>Available:</strong> 
+              <div className={`p-3 rounded-lg ${(canRollbackStaging || canRollbackProduction) ? 'bg-green-50' : 'bg-gray-50'}`}>
+                <p className={`text-sm ${(canRollbackStaging || canRollbackProduction) ? 'text-green-800' : 'text-gray-600'}`}>
+                  <strong>Scopes Available:</strong> 
                   {canRollbackStaging && ' Staging'}
                   {canRollbackStaging && canRollbackProduction && ' &'}
                   {canRollbackProduction && ' Production'}
@@ -320,15 +245,24 @@ const OverviewTab = ({ user }: { user: { name?: string; email?: string; userId?:
 
       {/* AI Assistant Section */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center space-x-3 mb-4">
+        <div className="flex items-center justify-center space-x-3 mb-4">
           <span className="text-2xl">🤖</span>
           <h3 className="text-lg font-semibold text-slate-900">AI Assistant</h3>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-3 text-center">
           <p className="text-slate-600">AI-powered chatbot for monitoring and deployment operations.</p>
-          <div className="bg-purple-50 p-3 rounded-lg">
-            <p className="text-sm text-purple-800">
-              <strong>Available:</strong> Ask questions about logs, metrics, deployments, and get intelligent insights.
+          <div className={`p-3 rounded-lg ${(canReadLogs || canReadMetrics || canDeployStaging || canDeployProduction || canRollbackStaging || canRollbackProduction) ? 'bg-green-50' : 'bg-gray-50'}`}>
+            <p className={`text-sm ${(canReadLogs || canReadMetrics || canDeployStaging || canDeployProduction || canRollbackStaging || canRollbackProduction) ? 'text-green-800' : 'text-gray-600'}`}>
+              <strong>Scopes Available:</strong> Ask questions about
+              {canReadLogs && ' logs'}
+              {canReadLogs && (canReadMetrics || canDeployStaging || canDeployProduction || canRollbackStaging || canRollbackProduction) && ','}
+              {canReadMetrics && ' metrics'}
+              {canReadMetrics && (canDeployStaging || canDeployProduction || canRollbackStaging || canRollbackProduction) && ','}
+              {(canDeployStaging || canDeployProduction) && ' deployments'}
+              {(canDeployStaging || canDeployProduction) && (canRollbackStaging || canRollbackProduction) && ','}
+              {(canRollbackStaging || canRollbackProduction) && ' rollbacks'}
+              {(!canReadLogs && !canReadMetrics && !canDeployStaging && !canDeployProduction && !canRollbackStaging && !canRollbackProduction) && ' basic operations'}
+              {' and get intelligent insights.'}
             </p>
           </div>
         </div>

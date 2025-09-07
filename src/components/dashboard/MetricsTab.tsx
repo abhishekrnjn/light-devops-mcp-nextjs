@@ -21,25 +21,40 @@ export const MetricsTab = () => {
   }, []);
 
   const fetchMetrics = useCallback(async () => {
-    if (!token || !isConnected) return;
+    console.log('🔄 fetchMetrics called with:', { token: !!token, isConnected, limit });
+    
+    if (!token) {
+      console.log('❌ No token available');
+      return;
+    }
+    
+    if (!isConnected) {
+      console.log('❌ MCP server not connected');
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
     setIsAuthError(false);
 
     try {
+      console.log('📡 Making request to getMetrics...');
       const response = await mcpService.getMetrics(token, limit);
+      console.log('📊 MetricsTab received response:', response);
+      
       if (response.success) {
         // Ensure we always set an array
         const metricsData = Array.isArray(response.data) ? response.data : [];
+        console.log('✅ Setting metrics data:', metricsData.length, 'entries');
         setMetrics(metricsData);
       } else {
+        console.log('❌ Response not successful:', response.error);
         setError(response.error || 'Failed to fetch metrics');
         setIsAuthError(response.isAuthError || false);
         setMetrics([]); // Reset to empty array on error
       }
     } catch (error) {
-      console.error('Error fetching metrics:', error);
+      console.error('💥 Error fetching metrics:', error);
       setError('Failed to fetch metrics');
       setIsAuthError(false);
       setMetrics([]); // Reset to empty array on error

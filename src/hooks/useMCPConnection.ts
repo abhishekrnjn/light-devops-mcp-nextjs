@@ -22,15 +22,22 @@ export const useMCPConnection = () => {
 
   // Lightweight health check that only checks connection status
   const performHealthCheck = useCallback(async () => {
-    if (!token) return;
+    if (!token) {
+      console.log('🔍 Health check: No token available');
+      return;
+    }
     
     try {
+      console.log('🔍 Health check: Checking MCP connection...');
       // Only check one endpoint for health check to minimize load
       const response = await mcpService.getResources(token);
       const wasConnected = response.success;
       
+      console.log('🔍 Health check result:', { wasConnected, isConnected, response: response.success ? 'success' : response.error });
+      
       // Only update state if connection status changed
       if (wasConnected !== isConnected) {
+        console.log('🔍 Connection status changed:', { from: isConnected, to: wasConnected });
         setIsConnected(wasConnected);
         if (wasConnected) {
           setError(null);
@@ -42,6 +49,7 @@ export const useMCPConnection = () => {
         }
       }
     } catch (error) {
+      console.log('🔍 Health check error:', error);
       // Only update if we were previously connected
       if (isConnected) {
         setIsConnected(false);

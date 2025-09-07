@@ -21,25 +21,40 @@ export const LogsTab = () => {
   }, []);
 
   const fetchLogs = useCallback(async () => {
-    if (!token || !isConnected) return;
+    console.log('🔄 fetchLogs called with:', { token: !!token, isConnected, filters });
+    
+    if (!token) {
+      console.log('❌ No token available');
+      return;
+    }
+    
+    if (!isConnected) {
+      console.log('❌ MCP server not connected');
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
     setIsAuthError(false);
 
     try {
+      console.log('📡 Making request to getLogs...');
       const response = await mcpService.getLogs(token, filters.level || undefined, filters.limit);
+      console.log('📋 LogsTab received response:', response);
+      
       if (response.success) {
         // Ensure we always set an array
         const logsData = Array.isArray(response.data) ? response.data : [];
+        console.log('✅ Setting logs data:', logsData.length, 'entries');
         setLogs(logsData);
       } else {
+        console.log('❌ Response not successful:', response.error);
         setError(response.error || 'Failed to fetch logs');
         setIsAuthError(response.isAuthError || false);
         setLogs([]); // Reset to empty array on error
       }
     } catch (error) {
-      console.error('Error fetching logs:', error);
+      console.error('💥 Error fetching logs:', error);
       setError('Failed to fetch logs');
       setIsAuthError(false);
       setLogs([]); // Reset to empty array on error

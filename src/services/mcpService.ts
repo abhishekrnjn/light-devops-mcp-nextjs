@@ -89,10 +89,22 @@ class MCPService {
     const query = params.toString();
     const response = await this.request<any>(`/mcp/resources/logs${query ? `?${query}` : ''}`, { method: 'GET' }, token);
     
-    // Extract the data array from the backend response
+    console.log('📋 getLogs full response:', JSON.stringify(response, null, 2));
+    
+    // Use original working logic but with debugging
     if (response.success && response.data?.data) {
+      console.log('✅ Found response.data.data:', response.data.data);
+      console.log('✅ Data is array:', Array.isArray(response.data.data));
+      console.log('✅ Data length:', response.data.data.length);
       return { success: true, data: response.data.data };
     }
+    
+    console.log('❌ Original extraction failed. Response structure:', {
+      success: response.success,
+      hasData: !!response.data,
+      dataKeys: response.data ? Object.keys(response.data) : 'no data',
+      hasDataData: response.data?.data !== undefined
+    });
     
     return response;
   }
@@ -104,10 +116,22 @@ class MCPService {
     const query = params.toString();
     const response = await this.request<any>(`/mcp/resources/metrics${query ? `?${query}` : ''}`, { method: 'GET' }, token);
     
-    // Extract the data array from the backend response
+    console.log('📊 getMetrics full response:', JSON.stringify(response, null, 2));
+    
+    // Use original working logic but with debugging
     if (response.success && response.data?.data) {
+      console.log('✅ Found response.data.data:', response.data.data);
+      console.log('✅ Data is array:', Array.isArray(response.data.data));
+      console.log('✅ Data length:', response.data.data.length);
       return { success: true, data: response.data.data };
     }
+    
+    console.log('❌ Original extraction failed. Response structure:', {
+      success: response.success,
+      hasData: !!response.data,
+      dataKeys: response.data ? Object.keys(response.data) : 'no data',
+      hasDataData: response.data?.data !== undefined
+    });
     
     return response;
   }

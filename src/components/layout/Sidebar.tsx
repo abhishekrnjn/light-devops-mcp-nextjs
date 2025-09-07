@@ -125,8 +125,7 @@ export const Sidebar = ({ activeTab, onTabChange, isCollapsed, onToggleCollapse,
         <div className="flex items-center justify-between">
           {!isCollapsed && (
             <div>
-              <h1 className="text-xl font-bold text-slate-900">DevOps</h1>
-              <p className="text-sm text-slate-600">Dashboard</p>
+              <h1 className="text-xl font-bold text-slate-900">DevOps MCP Agent</h1>
             </div>
           )}
           <button
@@ -139,18 +138,6 @@ export const Sidebar = ({ activeTab, onTabChange, isCollapsed, onToggleCollapse,
           </button>
         </div>
         
-        {/* Connection Status */}
-        <div className={`mt-3 flex items-center space-x-2 ${isCollapsed ? 'justify-center' : ''}`}>
-          <div 
-            className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
-            title={isConnected ? 'MCP Server is online and responding' : 'MCP Server is offline or unreachable'}
-          ></div>
-          {!isCollapsed && (
-            <span className="text-xs text-slate-600">
-              {isConnected ? 'MCP Server Connected' : 'MCP Server Disconnected'}
-            </span>
-          )}
-        </div>
       </div>
 
       {/* Navigation */}

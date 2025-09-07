@@ -11,11 +11,19 @@ import { parseError, isAuthError } from '@/utils/errorHandler';
 export const AITab = () => {
   const { token } = useJWT();
   const { mcpService, resources, tools, isConnected } = useMCPConnection();
-  const { permissions } = usePermissions();
+  const { permissions, hasPermission } = usePermissions();
   const { messages, setMessages, conversationHistory, setConversationHistory, clearConversation } = useChatContext();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Get permission states
+  const canReadLogs = hasPermission('read_logs');
+  const canReadMetrics = hasPermission('read_metrics');
+  const canDeployStaging = hasPermission('deploy_staging');
+  const canDeployProduction = hasPermission('deploy_production');
+  const canRollbackStaging = hasPermission('rollback_staging');
+  const canRollbackProduction = hasPermission('rollback_production');
 
   // Ensure resources and tools are arrays
   const safeResources = Array.isArray(resources) ? resources : [];
@@ -185,21 +193,18 @@ export const AITab = () => {
           <div className="text-center text-slate-600 py-8">
             <div className="text-4xl mb-2">🤖</div>
             <p>Ask me anything about your DevOps operations!</p>
-            <p className="text-sm mt-2">I can help you with logs, metrics, deployments, and more.</p>
-            <div className="mt-4 p-4 bg-blue-50 rounded-lg text-left">
-              <h4 className="font-semibold text-blue-800 mb-2">Your Available Operations:</h4>
-              <ul className="text-sm text-blue-700 space-y-1">
-                {safeResources.map((resource, index) => (
-                  <li key={index}>• {resource.name}: {resource.description}</li>
-                ))}
-                {safeTools.map((tool, index) => (
-                  <li key={index}>• {tool.name}: {tool.description}</li>
-                ))}
-                {safeResources.length === 0 && safeTools.length === 0 && (
-                  <li>• Loading available operations...</li>
-                )}
-              </ul>
-            </div>
+            <p className="text-sm mt-2">
+              I can help you with
+              {canReadLogs && ' logs'}
+              {canReadLogs && (canReadMetrics || canDeployStaging || canDeployProduction || canRollbackStaging || canRollbackProduction) && ','}
+              {canReadMetrics && ' metrics'}
+              {canReadMetrics && (canDeployStaging || canDeployProduction || canRollbackStaging || canRollbackProduction) && ','}
+              {(canDeployStaging || canDeployProduction) && ' deployments'}
+              {(canDeployStaging || canDeployProduction) && (canRollbackStaging || canRollbackProduction) && ','}
+              {(canRollbackStaging || canRollbackProduction) && ' rollbacks'}
+              {(!canReadLogs && !canReadMetrics && !canDeployStaging && !canDeployProduction && !canRollbackStaging && !canRollbackProduction) && ' basic operations'}
+              {' and more.'}
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
