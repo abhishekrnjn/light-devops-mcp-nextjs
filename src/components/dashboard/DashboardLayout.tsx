@@ -5,6 +5,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useMCPConnection } from '@/hooks/useMCPConnection';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { MainContent } from '@/components/layout/MainContent';
+import { ChatProvider } from '@/contexts/ChatContext';
 
 interface User {
   name?: string;
@@ -69,25 +70,27 @@ export const DashboardLayout = ({ user, onLogout }: DashboardLayoutProps) => {
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
-      {/* Sidebar */}
-      <Sidebar
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-        isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        isMobileOpen={isMobileSidebarOpen}
-        onMobileClose={() => setIsMobileSidebarOpen(false)}
-      />
-      
-      {/* Main Content */}
-      <MainContent
-        activeTab={activeTab}
-        user={user}
-        onLogout={onLogout}
-        onMobileMenuToggle={() => setIsMobileSidebarOpen(true)}
-        onRefreshConnection={refreshConnection}
-      />
-    </div>
+    <ChatProvider>
+      <div className="min-h-screen flex bg-gray-50">
+        {/* Sidebar */}
+        <Sidebar
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          isMobileOpen={isMobileSidebarOpen}
+          onMobileClose={() => setIsMobileSidebarOpen(false)}
+        />
+        
+        {/* Main Content */}
+        <MainContent
+          activeTab={activeTab}
+          user={user}
+          onLogout={onLogout}
+          onMobileMenuToggle={() => setIsMobileSidebarOpen(true)}
+          onRefreshConnection={refreshConnection}
+        />
+      </div>
+    </ChatProvider>
   );
 };

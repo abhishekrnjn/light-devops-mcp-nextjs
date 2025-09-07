@@ -28,7 +28,7 @@ export const MainContent = ({ activeTab, user, onLogout, onMobileMenuToggle, onR
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview':
-        return <OverviewTab />;
+        return <OverviewTab user={user} />;
       case 'logs':
         return <LogsTab />;
       case 'metrics':
@@ -40,7 +40,7 @@ export const MainContent = ({ activeTab, user, onLogout, onMobileMenuToggle, onR
       case 'ai':
         return <AITab />;
       default:
-        return <OverviewTab />;
+        return <OverviewTab user={user} />;
     }
   };
 
@@ -131,7 +131,7 @@ export const MainContent = ({ activeTab, user, onLogout, onMobileMenuToggle, onR
   );
 };
 
-const OverviewTab = () => {
+const OverviewTab = ({ user }: { user: { name?: string; email?: string; userId?: string } | null }) => {
   const { hasPermission } = usePermissions();
   const { isConnected } = useMCPConnection();
 
@@ -142,6 +142,17 @@ const OverviewTab = () => {
   const canRollbackStaging = hasPermission('rollback_staging');
   const canRollbackProduction = hasPermission('rollback_production');
 
+  // Helper function to extract first name
+  const getFirstName = () => {
+    if (user?.name) {
+      return user.name.split(' ')[0];
+    }
+    if (user?.email) {
+      return user.email.split('@')[0].split('.')[0];
+    }
+    return 'User';
+  };
+
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
@@ -149,7 +160,7 @@ const OverviewTab = () => {
         <div className="flex items-center space-x-4">
           <div className="text-6xl">🚀</div>
           <div>
-            <h1 className="text-3xl font-bold mb-2">Welcome to DevOps Dashboard</h1>
+            <h1 className="text-3xl font-bold mb-2">Hello {getFirstName()}</h1>
             <p className="text-blue-100 text-lg">
               Manage your infrastructure with powerful tools and AI assistance
             </p>
@@ -314,7 +325,7 @@ const OverviewTab = () => {
           <h3 className="text-lg font-semibold text-slate-900">AI Assistant</h3>
         </div>
         <div className="space-y-3">
-          <p className="text-slate-600">Get AI-powered assistance for your DevOps operations and troubleshooting.</p>
+          <p className="text-slate-600">AI-powered chatbot for monitoring and deployment operations.</p>
           <div className="bg-purple-50 p-3 rounded-lg">
             <p className="text-sm text-purple-800">
               <strong>Available:</strong> Ask questions about logs, metrics, deployments, and get intelligent insights.
@@ -395,7 +406,7 @@ const getTabDescription = (tab: string): string => {
     metrics: 'Track performance metrics and system statistics',
     deploy: 'Deploy new versions of your services',
     rollback: 'Rollback deployments to previous versions',
-    ai: 'Get AI-powered assistance for your operations',
+    ai: 'AI-powered chatbot for monitoring and deployment operations',
   };
   return descriptions[tab] || 'Manage your DevOps operations';
 };

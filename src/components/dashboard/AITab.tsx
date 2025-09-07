@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useJWT } from '@/hooks/useJWT';
 import { useMCPConnection } from '@/hooks/useMCPConnection';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useChatContext } from '@/contexts/ChatContext';
 import { ChatMessage } from '@/types/ai';
 import { parseError, isAuthError } from '@/utils/errorHandler';
 
@@ -11,7 +12,7 @@ export const AITab = () => {
   const { token } = useJWT();
   const { mcpService, resources, tools, isConnected } = useMCPConnection();
   const { permissions } = usePermissions();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const { messages, setMessages, conversationHistory, setConversationHistory, clearConversation } = useChatContext();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -58,9 +59,12 @@ export const AITab = () => {
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          message: input,
-          context,
-          history: messages.slice(-10), // Last 10 messages for context
+          message: userMessage.content,
+          context: {
+            ...context,
+            conversationHistory: conversationHistory
+          },
+          previousResponseId: conversationHistory.length > 0 ? 'has_history' : null, // Indicate if we have conversation history
         }),
       });
 
@@ -79,6 +83,11 @@ export const AITab = () => {
       };
 
       setMessages(prev => [...prev, aiMessage]);
+      
+      // Update conversation history for continuity
+      if (data.conversationHistory) {
+        setConversationHistory(data.conversationHistory);
+      }
 
       // Execute tool calls if any
       if (data.toolCalls && data.toolCalls.length > 0) {
@@ -162,6 +171,11 @@ export const AITab = () => {
     }
   };
 
+  const handleClearConversation = () => {
+    clearConversation();
+    setInput('');
+  };
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-slate-900">AI Assistant</h3>
@@ -242,6 +256,15 @@ export const AITab = () => {
         >
           {!isConnected ? 'Offline' : 'Send'}
         </button>
+        {messages.length > 0 && (
+          <button
+            onClick={handleClearConversation}
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+            title="Clear conversation"
+          >
+            Clear
+          </button>
+        )}
       </div>
     </div>
   );

@@ -46,7 +46,7 @@ export const TabManager = ({ tabs, activeTab, onTabChange }: TabManagerProps) =>
         return (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🚀</div>
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">Welcome to DevOps Dashboard</h2>
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">Welcome </h2>
             <p className="text-slate-600">Select a tab to get started</p>
           </div>
         );
