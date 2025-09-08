@@ -5,39 +5,69 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { ClientOnly } from '@/components/ClientOnly';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useMCPConnection } from '@/hooks/useMCPConnection';
 
 export default function Home() {
   const { isAuthenticated, isSessionLoading } = useSession();
   const { user, isUserLoading } = useUser();
   const { logout } = useDescope();
+  const { isLoading: permissionsLoading } = usePermissions();
+  const { isLoading: mcpLoading } = useMCPConnection();
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
+  const [authCheckComplete, setAuthCheckComplete] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   useEffect(() => {
-    if (isClient && !isSessionLoading && !isAuthenticated) {
-      // If user is not authenticated, redirect to sign-up
-      router.push('/signup');
+    if (isClient && !isSessionLoading) {
+      // Add a small delay to ensure session is fully established after OAuth
+      const timer = setTimeout(() => {
+        setAuthCheckComplete(true);
+        if (!isAuthenticated) {
+          // If user is not authenticated, redirect to sign-in
+          router.push('/login');
+        }
+      }, 500); // 500ms delay to prevent OAuth callback flash
+
+      return () => clearTimeout(timer);
     }
   }, [isClient, isAuthenticated, isSessionLoading, router]);
 
   const handleLogout = async () => {
+    setIsLoggingOut(true);
     try {
       // Use Descope's built-in logout method
       await logout();
-      router.push('/signup');
+      router.push('/login');
     } catch (error) {
       console.error('Logout error:', error);
       // Force redirect even if logout fails
-      router.push('/signup');
+      router.push('/login');
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
-  // Show loading state during hydration
-  if (!isClient || isSessionLoading || isUserLoading) {
+  // Show logout loading state
+  if (isLoggingOut) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-500 to-blue-600">
+        <div className="bg-white p-8 rounded-2xl shadow-xl text-center">
+          <div className="text-4xl mb-4">🚪</div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Signing Out...</h1>
+          <p className="text-gray-600">Please wait while we sign you out</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state during hydration and initial setup
+  if (!isClient || isSessionLoading || isUserLoading || permissionsLoading || mcpLoading || !authCheckComplete) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
         <div className="bg-white p-8 rounded-2xl shadow-xl text-center">
@@ -50,7 +80,7 @@ export default function Home() {
   }
 
   if (!isAuthenticated) {
-    return null; // Will redirect to sign-up
+    return null; // Will redirect to sign-in
   }
 
   return (

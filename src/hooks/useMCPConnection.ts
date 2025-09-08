@@ -9,7 +9,7 @@ export const useMCPConnection = () => {
   const [resources, setResources] = useState<MCPResource[]>([]);
   const [tools, setTools] = useState<MCPTool[]>([]);
   const [isConnected, setIsConnected] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start with loading true
   const [isClient, setIsClient] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isAuthError, setIsAuthError] = useState(false);
@@ -122,6 +122,7 @@ export const useMCPConnection = () => {
       setIsConnected(false);
       setError(null);
       setIsAuthError(false);
+      setIsLoading(false);
       return;
     }
 

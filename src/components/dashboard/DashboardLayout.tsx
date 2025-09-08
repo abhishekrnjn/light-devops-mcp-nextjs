@@ -33,18 +33,6 @@ export const DashboardLayout = ({ user, onLogout }: DashboardLayoutProps) => {
   const availableTabs = isClient ? getAvailableTabs() : [];
   const isLoading = !isClient || permissionsLoading || mcpLoading;
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
-        <div className="bg-white p-8 rounded-2xl shadow-xl text-center">
-          <div className="text-4xl mb-4">⏳</div>
-          <h1 className="text-2xl font-bold text-slate-800 mb-2">Loading Dashboard...</h1>
-          <p className="text-slate-600">Connecting to MCP server</p>
-        </div>
-      </div>
-    );
-  }
-
   // Only show full error screen for authentication errors
   if (mcpAuthError) {
     return (
@@ -89,6 +77,7 @@ export const DashboardLayout = ({ user, onLogout }: DashboardLayoutProps) => {
           onLogout={onLogout}
           onMobileMenuToggle={() => setIsMobileSidebarOpen(true)}
           onRefreshConnection={refreshConnection}
+          isLoading={isLoading}
         />
       </div>
     </ChatProvider>

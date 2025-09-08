@@ -20,9 +20,10 @@ interface MainContentProps {
   onLogout: () => void;
   onMobileMenuToggle?: () => void;
   onRefreshConnection?: () => void;
+  isLoading?: boolean;
 }
 
-export const MainContent = ({ activeTab, user, onLogout, onMobileMenuToggle, onRefreshConnection }: MainContentProps) => {
+export const MainContent = ({ activeTab, user, onLogout, onMobileMenuToggle, onRefreshConnection, isLoading }: MainContentProps) => {
   const { isConnected, error: mcpError } = useMCPConnection();
   
   const renderTabContent = () => {
@@ -139,7 +140,21 @@ const OverviewTab = ({ user }: { user: { name?: string; email?: string; userId?:
         </div>
       </div>
 
-
+      {/* Connection Status */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center space-x-3">
+          <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+          <h3 className="text-lg font-semibold text-slate-900">
+            {isConnected ? 'MCP Server Connected' : 'MCP Server Disconnected'}
+          </h3>
+        </div>
+        <p className="text-slate-600 mt-2">
+          {isConnected 
+            ? 'All systems are operational and ready for DevOps operations.' 
+            : 'Unable to connect to MCP server. Please check your connection and try again.'
+          }
+        </p>
+      </div>
 
       {/* Available Features */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

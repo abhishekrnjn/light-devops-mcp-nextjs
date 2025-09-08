@@ -8,17 +8,25 @@ import { ErrorDisplay } from '@/components/common/ErrorDisplay';
 
 export const LogsTab = () => {
   const { token } = useJWT();
-  const { mcpService, isConnected } = useMCPConnection();
+  const { mcpService, isConnected, isLoading: mcpLoading } = useMCPConnection();
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isAuthError, setIsAuthError] = useState(false);
   const [filters, setFilters] = useState({ level: '', limit: 10 });
   const [isClient, setIsClient] = useState(false);
+  const [hasCheckedConnection, setHasCheckedConnection] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Track when we've checked the connection status
+  useEffect(() => {
+    if (isClient) {
+      setHasCheckedConnection(true);
+    }
+  }, [isClient, isConnected]);
 
   const fetchLogs = useCallback(async () => {
     console.log('🔄 fetchLogs called with:', { token: !!token, isConnected, filters });
@@ -137,7 +145,12 @@ export const LogsTab = () => {
               />
 
               <div className="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
-                {!isConnected ? (
+                {!hasCheckedConnection || isLoading || mcpLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <p className="text-slate-600">Loading logs...</p>
+                  </div>
+                ) : !isConnected ? (
                   <div className="text-center py-8">
                     <div className="text-4xl mb-4">⚠️</div>
                     <p className="text-slate-600 mb-2">MCP Server Offline</p>

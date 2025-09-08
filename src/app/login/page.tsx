@@ -19,13 +19,13 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-500 to-blue-600">
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
         <div className="text-center mb-6">
-          <div className="text-4xl mb-4">👋</div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Welcome Back!</h1>
-          <p className="text-gray-600">Sign in to your account</p>
+          <div className="text-4xl mb-4">🔐</div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Sign In</h1>
+          <p className="text-gray-600">Access your DevOps dashboard</p>
         </div>
         
         <Descope
-          flowId="sign-up-or-in"
+          flowId="sign-in"
           onSuccess={handleSuccess}
           onError={handleError}
           theme="light"

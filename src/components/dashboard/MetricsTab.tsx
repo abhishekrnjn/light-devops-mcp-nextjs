@@ -8,17 +8,25 @@ import { ErrorDisplay } from '@/components/common/ErrorDisplay';
 
 export const MetricsTab = () => {
   const { token } = useJWT();
-  const { mcpService, isConnected } = useMCPConnection();
+  const { mcpService, isConnected, isLoading: mcpLoading } = useMCPConnection();
   const [metrics, setMetrics] = useState<MetricEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isAuthError, setIsAuthError] = useState(false);
   const [limit, setLimit] = useState(20);
   const [isClient, setIsClient] = useState(false);
+  const [hasCheckedConnection, setHasCheckedConnection] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Track when we've checked the connection status
+  useEffect(() => {
+    if (isClient) {
+      setHasCheckedConnection(true);
+    }
+  }, [isClient, isConnected]);
 
   const fetchMetrics = useCallback(async () => {
     console.log('🔄 fetchMetrics called with:', { token: !!token, isConnected, limit });
@@ -121,30 +129,35 @@ export const MetricsTab = () => {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {!isConnected ? (
+        {!hasCheckedConnection || isLoading || mcpLoading ? (
+          <div className="col-span-full text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-slate-600">Loading metrics...</p>
+          </div>
+        ) : !isConnected ? (
           <div className="col-span-full text-center py-8">
             <div className="text-4xl mb-4">⚠️</div>
             <p className="text-slate-600 mb-2">MCP Server Offline</p>
             <p className="text-sm text-slate-500">Metrics cannot be fetched while the server is offline.</p>
           </div>
-        ) : Array.isArray(metrics) && metrics.map((metric, index) => (
-          <div key={index} className="bg-white p-4 rounded-lg border shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="font-medium text-slate-900">{metric.name}</h4>
-              <span className="text-xs text-slate-600">{metric.timestamp}</span>
+        ) : Array.isArray(metrics) && metrics.length > 0 ? (
+          metrics.map((metric, index) => (
+            <div key={index} className="bg-white p-4 rounded-lg border shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-medium text-slate-900">{metric.name}</h4>
+                <span className="text-xs text-slate-600">{metric.timestamp}</span>
+              </div>
+              <div className="text-2xl font-bold text-blue-600">
+                {metric.value} {metric.unit || ''}
+              </div>
             </div>
-            <div className="text-2xl font-bold text-blue-600">
-              {metric.value} {metric.unit || ''}
-            </div>
+          ))
+        ) : (
+          <div className="col-span-full text-center py-8">
+            <p className="text-slate-600">No metrics available</p>
           </div>
-        ))}
+        )}
       </div>
-
-      {(!Array.isArray(metrics) || metrics.length === 0) && !isLoading && (
-        <div className="text-center py-8">
-          <p className="text-slate-600">No metrics available</p>
-        </div>
-      )}
     </div>
   );
 };

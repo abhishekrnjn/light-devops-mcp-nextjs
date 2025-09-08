@@ -20,12 +20,12 @@ export default function SignUpPage() {
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
         <div className="text-center mb-6">
           <div className="text-4xl mb-4">🚀</div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Welcome!</h1>
-          <p className="text-gray-600">Create your account to get started</p>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Create Account</h1>
+          <p className="text-gray-600">Join the DevOps platform</p>
         </div>
         
         <Descope
-          flowId="sign-up-or-in"
+          flowId="sign-up"
           onSuccess={handleSuccess}
           onError={handleError}
           theme="light"
