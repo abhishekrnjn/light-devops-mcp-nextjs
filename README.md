@@ -12,7 +12,7 @@ A modern AI-powered DevOps portal built with Next.js, TypeScript, Tailwind CSS, 
 - **TypeScript**: Full type safety throughout the application
 - **Auto-refresh**: Dashboard automatically refreshes every 30 seconds
 
-## 🛠️ Setup
+## 🛠️ Local Development Setup
 
 1. **Install Dependencies**:
    ```bash
@@ -20,7 +20,12 @@ A modern AI-powered DevOps portal built with Next.js, TypeScript, Tailwind CSS, 
    ```
 
 2. **Environment Configuration**:
-   Create a `.env.local` file with the following variables:
+   Copy `.env.example` to `.env.local` and configure your variables:
+   ```bash
+   cp .env.example .env.local
+   ```
+   
+   Update the following variables in `.env.local`:
    ```
    # Descope Configuration
    NEXT_PUBLIC_DESCOPE_PROJECT_ID=your_descope_project_id_here
@@ -29,12 +34,13 @@ A modern AI-powered DevOps portal built with Next.js, TypeScript, Tailwind CSS, 
    # MCP Server Configuration
    NEXT_PUBLIC_MCP_SERVER_URL=http://localhost:8001
    
-   # NextAuth Configuration
-   NEXTAUTH_URL=http://localhost:3000
-   
    # OpenAI Configuration (for AI Assistant)
    OPENAI_API_KEY=your_openai_api_key_here
    OPENAI_MODEL=gpt-4o-mini
+   
+   # Next.js Configuration
+   NEXTAUTH_URL=http://localhost:3000
+   NEXTAUTH_SECRET=your_nextauth_secret_here
    ```
 
 3. **Start Development Server**:
@@ -44,6 +50,50 @@ A modern AI-powered DevOps portal built with Next.js, TypeScript, Tailwind CSS, 
 
 4. **Visit Application**:
    Open [http://localhost:3000](http://localhost:3000)
+
+## 🚀 Vercel Deployment
+
+### Prerequisites
+- Vercel account
+- Descope project setup
+- OpenAI API key
+- MCP server deployed and accessible
+
+### Deployment Steps
+
+1. **Fork/Clone Repository**:
+   ```bash
+   git clone <your-repo-url>
+   cd devops-mcp-nextjs
+   ```
+
+2. **Deploy to Vercel**:
+   ```bash
+   # Install Vercel CLI
+   npm i -g vercel
+   
+   # Deploy
+   vercel
+   ```
+
+3. **Configure Environment Variables**:
+   In your Vercel dashboard, add the following environment variables:
+   - `NEXT_PUBLIC_DESCOPE_PROJECT_ID`: Your Descope project ID
+   - `NEXT_PUBLIC_DESCOPE_BASE_URL`: https://api.descope.com
+   - `NEXT_PUBLIC_MCP_SERVER_URL`: Your MCP server URL
+   - `OPENAI_API_KEY`: Your OpenAI API key
+   - `OPENAI_MODEL`: gpt-4o-mini (or your preferred model)
+   - `NEXTAUTH_URL`: Your Vercel deployment URL
+   - `NEXTAUTH_SECRET`: A random secret string
+
+4. **Redeploy**:
+   After adding environment variables, redeploy your application.
+
+### Alternative: One-Click Deploy
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-username/devops-mcp-nextjs)
+
+**Note**: You'll still need to configure the environment variables after deployment.
 
 ## 📱 Usage
 

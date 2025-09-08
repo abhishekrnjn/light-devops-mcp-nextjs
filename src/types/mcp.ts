@@ -46,3 +46,33 @@ export interface RollbackResult {
   status: string;
   timestamp: string;
 }
+
+// New types for REST API responses
+export interface DeploymentEntry {
+  deployment_id: string;
+  service_name: string;
+  version: string;
+  environment: string;
+  status: string;
+  timestamp: string;
+}
+
+export interface RollbackEntry {
+  rollback_id: string;
+  deployment_id: string;
+  status: string;
+  reason: string;
+  timestamp: string;
+}
+
+export interface DeployRequest {
+  service_name: string;
+  version: string;
+  environment: string;
+}
+
+export interface RollbackRequest {
+  deployment_id: string;
+  reason: string;
+  environment: string;
+}

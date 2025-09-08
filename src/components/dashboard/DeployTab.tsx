@@ -44,7 +44,14 @@ export const DeployTab = () => {
       );
 
       if (response.success) {
-        setResult(response.data!);
+        // MCP tools return data in response.data.result structure
+        const toolResponse = response.data as any;
+        if (toolResponse?.success && toolResponse?.result) {
+          setResult(toolResponse.result);
+        } else {
+          setError(toolResponse?.error || 'Deployment failed');
+          setIsAuthError(false);
+        }
       } else {
         setError(response.error || 'Deployment failed');
         setIsAuthError(response.isAuthError || false);

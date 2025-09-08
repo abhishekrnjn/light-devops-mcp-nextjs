@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useMCPConnection } from '@/hooks/useMCPConnection';
+import OutboundAppsDropdown from '@/components/outbound/OutboundAppsDropdown';
 
 interface SidebarProps {
   activeTab: string;
@@ -141,30 +142,40 @@ export const Sidebar = ({ activeTab, onTabChange, isCollapsed, onToggleCollapse,
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
-        {filteredMenuItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => onTabChange(item.id)}
-            className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 group ${
-              activeTab === item.id
-                ? `${item.color} shadow-sm`
-                : 'text-slate-700 hover:bg-gray-50 hover:text-slate-900'
-            }`}
-            title={isCollapsed ? item.description : undefined}
-          >
-            <span className="text-xl flex-shrink-0">{item.icon}</span>
-            {!isCollapsed && (
-              <div className="flex-1 text-left">
-                <div className="font-medium">{item.name}</div>
-                <div className="text-xs opacity-75">{item.description}</div>
-              </div>
-            )}
-            {activeTab === item.id && !isCollapsed && (
-              <div className="w-1 h-6 bg-current rounded-full"></div>
-            )}
-          </button>
-        ))}
+      <nav className="flex-1 p-4 space-y-4">
+        {/* Main Navigation Items */}
+        <div className="space-y-2">
+          {filteredMenuItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => onTabChange(item.id)}
+              className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 group ${
+                activeTab === item.id
+                  ? `${item.color} shadow-sm`
+                  : 'text-slate-700 hover:bg-gray-50 hover:text-slate-900'
+              }`}
+              title={isCollapsed ? item.description : undefined}
+            >
+              <span className="text-xl flex-shrink-0">{item.icon}</span>
+              {!isCollapsed && (
+                <div className="flex-1 text-left">
+                  <div className="font-medium">{item.name}</div>
+                  <div className="text-xs opacity-75">{item.description}</div>
+                </div>
+              )}
+              {activeTab === item.id && !isCollapsed && (
+                <div className="w-1 h-6 bg-current rounded-full"></div>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Outbound Apps Section */}
+        <div className="border-t border-gray-200 pt-4">
+          <div className="p-3">
+            <OutboundAppsDropdown />
+          </div>
+        </div>
       </nav>
 
       {/* Footer */}

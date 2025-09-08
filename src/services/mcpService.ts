@@ -1,5 +1,6 @@
 import { MCPResource, MCPTool, MCPResponse, LogEntry, MetricEntry, DeploymentResult, RollbackResult } from '@/types/mcp';
 import { parseError, isAuthError } from '@/utils/errorHandler';
+import { tokenRefreshService } from './tokenRefreshService';
 
 const MCP_SERVER_URL = process.env.NEXT_PUBLIC_MCP_SERVER_URL || 'http://localhost:8001';
 
@@ -7,7 +8,8 @@ class MCPService {
   private async request<T>(
     endpoint: string, 
     options: RequestInit = {}, 
-    token?: string
+    token?: string,
+    retryCount = 0
   ): Promise<MCPResponse<T>> {
     const url = `${MCP_SERVER_URL}${endpoint}`;
     const headers: Record<string, string> = {
@@ -32,6 +34,25 @@ class MCPService {
       });
 
       console.log('📡 Response status:', response.status, response.statusText);
+
+      // Handle 401 Unauthorized - attempt token refresh
+      if (response.status === 401 && retryCount === 0) {
+        console.log('🔄 401 Unauthorized - attempting token refresh...');
+        
+        const refreshedToken = await tokenRefreshService.refreshToken();
+        if (refreshedToken) {
+          console.log('✅ Token refreshed, retrying request...');
+          // Retry the request with the new token
+          return this.request<T>(endpoint, options, refreshedToken, retryCount + 1);
+        } else {
+          console.error('❌ Token refresh failed');
+          return { 
+            success: false, 
+            error: 'Session expired. Please log in again.',
+            isAuthError: true
+          };
+        }
+      }
 
       if (!response.ok) {
         const error = await response.text();
@@ -156,11 +177,10 @@ class MCPService {
     reason: string,
     environment: string
   ): Promise<MCPResponse<RollbackResult>> {
-    const endpoint = environment === 'production' ? '/mcp/tools/rollback_production' : '/mcp/tools/rollback_staging';
-    return this.request<RollbackResult>(endpoint, {
+    return this.request<RollbackResult>('/mcp/tools/rollback_deployment', {
       method: 'POST',
       body: JSON.stringify({
-        arguments: { deployment_id: deploymentId, reason }
+        arguments: { deployment_id: deploymentId, reason, environment }
       })
     }, token);
   }
@@ -174,6 +194,7 @@ class MCPService {
       })
     }, token);
   }
+
 }
 
 export const mcpService = new MCPService();

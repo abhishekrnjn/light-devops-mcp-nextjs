@@ -7,6 +7,7 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { ClientOnly } from '@/components/ClientOnly';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useMCPConnection } from '@/hooks/useMCPConnection';
+import { useTokenRefresh } from '@/hooks/useTokenRefresh';
 
 export default function Home() {
   const { isAuthenticated, isSessionLoading } = useSession();
@@ -18,6 +19,9 @@ export default function Home() {
   const [isClient, setIsClient] = useState(false);
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  
+  // Initialize token refresh service
+  useTokenRefresh();
 
   useEffect(() => {
     setIsClient(true);
