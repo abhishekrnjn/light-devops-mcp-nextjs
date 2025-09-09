@@ -69,13 +69,21 @@ export const MetricsTab = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [token, limit, mcpService, isConnected]);
+  }, [token, limit, isConnected]); // Removed mcpService dependency
 
+  // Separate effect for initial load
   useEffect(() => {
-    if (isClient) {
+    if (isClient && token && isConnected) {
       fetchMetrics();
     }
-  }, [isClient, token, limit, fetchMetrics]);
+  }, [isClient, token, isConnected]); // Removed fetchMetrics dependency
+
+  // Separate effect for limit changes
+  useEffect(() => {
+    if (isClient && token && isConnected) {
+      fetchMetrics();
+    }
+  }, [limit]); // Only trigger on limit changes
 
   if (!isClient) {
     return (

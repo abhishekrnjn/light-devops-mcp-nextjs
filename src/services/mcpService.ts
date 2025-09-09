@@ -163,7 +163,7 @@ class MCPService {
     version: string, 
     environment: string
   ): Promise<MCPResponse<DeploymentResult>> {
-    return this.request<DeploymentResult>('/mcp/tools/deploy_service', {
+    return this.request<DeploymentResult>('/mcp/tools/postMcpToolsDeployService', {
       method: 'POST',
       body: JSON.stringify({
         arguments: { service_name: serviceName, version, environment }
@@ -177,7 +177,7 @@ class MCPService {
     reason: string,
     environment: string
   ): Promise<MCPResponse<RollbackResult>> {
-    return this.request<RollbackResult>('/mcp/tools/rollback_deployment', {
+    return this.request<RollbackResult>('/mcp/tools/postMcpToolsRollbackService', {
       method: 'POST',
       body: JSON.stringify({
         arguments: { deployment_id: deploymentId, reason, environment }
