@@ -1,10 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { ToolValidator } from '@/lib/tool-validator';
+import { mcpService } from '@/services/mcpService';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
+
+// Helper function to execute tool calls through MCP service
+async function executeToolCall(toolCall: { name: string; arguments: Record<string, unknown> }, token: string): Promise<unknown> {
+  const { name, arguments: args } = toolCall;
+  
+  switch (name) {
+    case 'deploy_service':
+      return await mcpService.deployService(
+        token,
+        args.service_name as string,
+        args.version as string,
+        args.environment as string
+      );
+      
+    case 'rollback_deployment':
+      return await mcpService.rollbackDeployment(
+        token,
+        args.deployment_id as string,
+        args.reason as string,
+        args.environment as string
+      );
+      
+    case 'getMcpResourcesLogs':
+      return await mcpService.getLogs(
+        token,
+        args.level as string,
+        args.limit as number
+      );
+      
+    case 'getMcpResourcesMetrics':
+      return await mcpService.getMetrics(
+        token,
+        args.limit as number
+      );
+      
+    case 'authenticate_user':
+      return await mcpService.authenticateUser(
+        token
+      );
+      
+    default:
+      throw new Error(`Unknown tool: ${name}`);
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,12 +67,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Authorization required' }, { status: 401 });
     }
 
+    // Extract token from authorization header
+    const token = authHeader.replace('Bearer ', '');
+
     // Build system message for first interaction or continue conversation
     const systemMessage = `You are a DevOps assistant that helps manage logs, metrics, and deployments by calling MCP endpoints when needed.
 
 You have access to the following MCP tools:
 - deploy_service: Deploy a service to a specific environment (development, staging, production)
-  Required parameters: service_name (NOT "service"), version, environment
+  Required parameters: service_name, version, environment
 - rollback_deployment: Rollback a deployment to previous version
   Required parameters: deployment_id, reason, environment (staging or production)
 - authenticate_user: Authenticate user and get permissions
@@ -36,8 +84,6 @@ You have access to the following MCP tools:
   Optional parameters: level (DEBUG, INFO, WARN, ERROR), limit, since
 - getMcpResourcesMetrics: Get performance metrics with optional filtering
   Optional parameters: limit, service, metric_type
-
-CRITICAL: Use EXACT parameter names as specified above. For deploy_service, use "service_name" not "service".
 
 IMPORTANT PARAMETER VALIDATION RULES:
 1. ALWAYS ask follow-up questions for missing required parameters before making tool calls
@@ -57,35 +103,6 @@ If you need to call a tool, respond with a JSON object containing:
       "arguments": {
         "param1": "value1",
         "param2": "value2"
-      }
-    }
-  ]
-}
-
-EXAMPLES:
-For deploy_service:
-{
-  "toolCalls": [
-    {
-      "name": "deploy_service",
-      "arguments": {
-        "service_name": "payment-service",
-        "version": "v1.2.3",
-        "environment": "staging"
-      }
-    }
-  ]
-}
-
-For rollback_deployment:
-{
-  "toolCalls": [
-    {
-      "name": "rollback_deployment",
-      "arguments": {
-        "deployment_id": "deploy-12345",
-        "reason": "Critical bug found",
-        "environment": "production"
       }
     }
   ]
@@ -120,30 +137,36 @@ Otherwise, provide a helpful response based on the conversation.`;
       temperature: 0.7,
     });
 
-    let reply = completion.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response.";
+    const reply = completion.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response.";
 
     // Check if the response contains tool calls
     let toolCalls = [];
+    const toolResults = [];
     const validationResults = [];
+    let finalReply = reply;
     
     try {
       const parsedReply = JSON.parse(reply);
       if (parsedReply.toolCalls && Array.isArray(parsedReply.toolCalls)) {
         // Validate each tool call
         for (const toolCall of parsedReply.toolCalls) {
-          // Fix common parameter name mismatches
-          if (toolCall.name === 'deploy_service' && toolCall.arguments) {
-            if (toolCall.arguments.service && !toolCall.arguments.service_name) {
-              toolCall.arguments.service_name = toolCall.arguments.service;
-              delete toolCall.arguments.service;
-            }
-          }
-          
           const validation = ToolValidator.validateToolCall(toolCall);
           validationResults.push(validation);
           
           if (validation.isValid) {
-            toolCalls.push(toolCall);
+            // Execute the tool call through MCP service
+            try {
+              const result = await executeToolCall(toolCall, token);
+              toolCalls.push(toolCall);
+              toolResults.push(result);
+            } catch (error) {
+              const executionError = {
+                toolName: toolCall.name,
+                error: error instanceof Error ? error.message : 'Tool execution failed',
+                details: error
+              };
+              toolResults.push(executionError);
+            }
           } else {
             // Generate follow-up questions for invalid tool calls
             const followUpMessage = ToolValidator.generateFollowUpMessage(
@@ -153,7 +176,7 @@ Otherwise, provide a helpful response based on the conversation.`;
             
             if (followUpMessage) {
               // Override the reply with follow-up questions
-              reply = followUpMessage;
+              finalReply = followUpMessage;
               toolCalls = []; // Clear tool calls since we need more info
             }
           }
@@ -173,8 +196,9 @@ Otherwise, provide a helpful response based on the conversation.`;
     ];
 
     return NextResponse.json({ 
-      content: reply,
+      content: finalReply,
       toolCalls,
+      toolResults,
       validationResults,
       conversationHistory: updatedHistory // Return the full conversation history
     });

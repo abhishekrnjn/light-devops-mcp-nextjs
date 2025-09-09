@@ -4,15 +4,19 @@ An AI-powered DevOps platform that enables autonomous agents to perform complex 
 
 ## Team Information
 
-**Team Name:** abhishekrnjn_5879
+**Team Name:** [abhishekrnjn_5879]
 
-**Team Members:** Abhishek Ranjan
+**Team Members:** [Abhishek Ranjan]
 
 ## Hackathon Theme / Challenge
 
-**Theme:** Theme 2
+**Theme:** [Theme 2]
 
 **Challenge Addressed:** Building an autonomous DevOps platform that enables AI agents to perform complex DevOps operations through a standardized Model Context Protocol (MCP) interface, with integrated security, monitoring, and role-based access controls for enterprise environments.
+
+## Demo Video Link
+
+[Demo video will be added here]
 
 ## What We Built
 
@@ -121,9 +125,6 @@ We built a comprehensive AI-powered DevOps portal that serves as a bridge betwee
 - OpenAI API access
 - MCP server backend
 
-## Demo Video Link
-
-[Demo video will be added here]
 
 ## What We'd Do With More Time
 
