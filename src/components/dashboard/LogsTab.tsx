@@ -69,21 +69,13 @@ export const LogsTab = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [token, filters.level, filters.limit, isConnected]); // Removed mcpService dependency
+  }, [token, filters, mcpService, isConnected]);
 
-  // Separate effect for initial load
   useEffect(() => {
-    if (isClient && token && isConnected) {
+    if (isClient) {
       fetchLogs();
     }
-  }, [isClient, token, isConnected]); // Removed fetchLogs dependency
-
-  // Separate effect for filter changes
-  useEffect(() => {
-    if (isClient && token && isConnected) {
-      fetchLogs();
-    }
-  }, [filters.level, filters.limit]); // Only trigger on filter changes
+  }, [isClient, token, filters, fetchLogs]);
 
   const getLevelColor = (level: string) => {
     switch (level.toUpperCase()) {

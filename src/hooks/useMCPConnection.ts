@@ -158,9 +158,6 @@ export const useMCPConnection = () => {
     }
   }, [token, isAuthenticated, fetchMCPData]);
 
-  // Memoize mcpService to prevent unnecessary recreations
-  const memoizedMcpService = useCallback(() => mcpService, []);
-
   return {
     resources,
     tools,
@@ -168,7 +165,7 @@ export const useMCPConnection = () => {
     isLoading: !isClient || isLoading,
     error,
     isAuthError,
-    mcpService: memoizedMcpService(),
+    mcpService,
     refreshConnection,
   };
 };
