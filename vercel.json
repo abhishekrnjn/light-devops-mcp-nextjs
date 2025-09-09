@@ -9,9 +9,7 @@
     "NEXT_PUBLIC_DESCOPE_BASE_URL": "@descope_base_url",
     "NEXT_PUBLIC_MCP_SERVER_URL": "@mcp_server_url",
     "OPENAI_API_KEY": "@openai_api_key",
-    "OPENAI_MODEL": "@openai_model",
-    "NEXTAUTH_URL": "@nextauth_url",
-    "NEXTAUTH_SECRET": "@nextauth_secret"
+    "NEXTAUTH_URL": "@nextauth_url"
   },
   "functions": {
     "src/app/api/**/*.ts": {
