@@ -33,6 +33,7 @@ export interface MetricEntry {
 }
 
 export interface DeploymentResult {
+  deployment_id: string;
   service_name: string;
   version: string;
   environment: string;
@@ -41,10 +42,57 @@ export interface DeploymentResult {
 }
 
 export interface RollbackResult {
+  rollback_id: string;
   deployment_id: string;
-  reason: string;
   status: string;
+  reason: string;
+  environment: string;
   timestamp: string;
+}
+
+// Enhanced response types with status codes and metadata
+export interface EnhancedDeploymentResponse {
+  success: boolean;
+  deployment: DeploymentResult;
+  message: string;
+  metadata: {
+    deployment_id: string;
+    timestamp: string;
+    environment: string;
+    service_type: 'test' | 'critical' | 'experimental' | 'standard';
+  };
+}
+
+export interface EnhancedRollbackResponse {
+  success: boolean;
+  rollback: RollbackResult;
+  message: string;
+  metadata: {
+    rollback_id: string;
+    deployment_id: string;
+    timestamp: string;
+    environment: string;
+    reason_type: 'critical' | 'test' | 'experimental' | 'standard';
+  };
+}
+
+export interface EnhancedListResponse<T> {
+  success: boolean;
+  deployments?: T[];
+  rollbacks?: T[];
+  count: number;
+  message: string;
+  metadata: {
+    timestamp: string;
+    total_deployments?: number;
+    total_rollbacks?: number;
+    environments: string[];
+    status_summary: {
+      success: number;
+      failed: number;
+      in_progress: number;
+    };
+  };
 }
 
 // New types for REST API responses

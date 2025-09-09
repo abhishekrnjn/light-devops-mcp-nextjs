@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useDescope } from '@descope/nextjs-sdk/client';
 import { OutboundAppConfig, OutboundConnection } from '@/services/outboundService';
-import GitLabConnectModal from './GitLabConnectModal';
+import { useOutboundConnection } from '@/hooks/useOutboundConnection';
 
 interface OutboundConnectionCardProps {
   app: OutboundAppConfig;
@@ -12,11 +12,19 @@ interface OutboundConnectionCardProps {
 
 export const OutboundConnectionCard = ({ app, isCollapsed }: OutboundConnectionCardProps) => {
   const descope = useDescope();
-  const [connection, setConnection] = useState<OutboundConnection | null>(null);
+  const { addConnection, removeConnection, isConnected } = useOutboundConnection();
   const [isConnecting, setIsConnecting] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showGitLabModal, setShowGitLabModal] = useState(false);
+  
+  const connection = isConnected(app.id) ? {
+    id: `${app.id}-connection`,
+    providerId: app.id,
+    providerName: app.name,
+    status: 'connected' as const,
+    connectedAt: new Date(),
+    scopes: app.scopes
+  } : null;
 
   useEffect(() => {
     if (descope) {
@@ -25,39 +33,54 @@ export const OutboundConnectionCard = ({ app, isCollapsed }: OutboundConnectionC
   }, [descope, app.id]);
 
   const loadConnectionStatus = async () => {
-    // For now, we'll assume no connection until we can properly check
-    // This will be updated when the connection is established
-    setConnection(null);
+    // Connection status is now managed by context
     setError(null);
   };
 
-  const handleConnect = () => {
+  const handleConnect = async () => {
     if (!descope) return;
     
     setError(null);
-    setShowGitLabModal(true);
+    setIsConnecting(true);
+    
+    try {
+      // Simulate connection process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Add connection to context
+      addConnection({
+        id: `${app.id}-connection`,
+        providerId: app.id,
+        providerName: app.name,
+        status: 'connected',
+        connectedAt: new Date(),
+        scopes: app.scopes
+      });
+    } catch (error) {
+      setError('Failed to connect. Please try again.');
+    } finally {
+      setIsConnecting(false);
+    }
   };
 
-  const handleGitLabSuccess = () => {
-    console.log('GitLab step-up authentication successful!');
-    setConnection({
-      id: 'gitlab-connection',
-      providerId: app.id,
-      providerName: app.name,
-      status: 'connected',
-      connectedAt: new Date(),
-      scopes: app.scopes
-    });
-    setShowGitLabModal(false);
-  };
-
-  const handleGitLabClose = () => {
-    setShowGitLabModal(false);
-  };
 
   const handleDisconnect = async () => {
-    // For now, we'll just show a message that disconnect is not available
-    setError('Disconnect functionality not yet implemented');
+    if (!descope) return;
+    
+    setError(null);
+    setIsDisconnecting(true);
+    
+    try {
+      // Simulate disconnection process
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Remove connection from context
+      removeConnection(`${app.id}-connection`);
+    } catch (error) {
+      setError('Failed to disconnect. Please try again.');
+    } finally {
+      setIsDisconnecting(false);
+    }
   };
 
   const getStatusColor = () => {
@@ -106,8 +129,7 @@ export const OutboundConnectionCard = ({ app, isCollapsed }: OutboundConnectionC
   }
 
   return (
-    <>
-      <div className={`p-3 rounded-lg border transition-all duration-200 ${getStatusColor()}`}>
+    <div className={`p-3 rounded-lg border transition-all duration-200 ${getStatusColor()}`}>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center space-x-2">
           <span className="text-lg">{app.icon}</span>
@@ -135,23 +157,24 @@ export const OutboundConnectionCard = ({ app, isCollapsed }: OutboundConnectionC
       )}
       
       <div className="flex space-x-2">
-        {connection?.status === 'connected' ? (
-          <button
-            onClick={handleDisconnect}
-            disabled={isDisconnecting}
-            className="flex-1 px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors disabled:opacity-50"
-          >
-            {isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
-          </button>
-        ) : (
-          <button
-            onClick={handleConnect}
-            disabled={isConnecting}
-            className="flex-1 px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors disabled:opacity-50"
-          >
-            {isConnecting ? 'Connecting...' : 'Connect'}
-          </button>
-        )}
+        <button
+          onClick={connection?.status === 'connected' ? handleDisconnect : handleConnect}
+          disabled={isConnecting || isDisconnecting}
+          className={`flex-1 px-3 py-1 text-xs rounded transition-colors disabled:opacity-50 ${
+            connection?.status === 'connected'
+              ? 'bg-green-100 text-green-700 hover:bg-green-200'
+              : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+          }`}
+        >
+          {isConnecting 
+            ? 'Connecting...' 
+            : isDisconnecting 
+              ? 'Disconnecting...' 
+              : connection?.status === 'connected' 
+                ? 'Connected' 
+                : 'Connect'
+          }
+        </button>
         
         {connection?.status === 'connected' && (
           <button
@@ -164,14 +187,5 @@ export const OutboundConnectionCard = ({ app, isCollapsed }: OutboundConnectionC
         )}
       </div>
     </div>
-
-    {/* GitLab Connect Modal */}
-    {showGitLabModal && (
-      <GitLabConnectModal
-        onSuccess={handleGitLabSuccess}
-        onClose={handleGitLabClose}
-      />
-    )}
-  </>
   );
 };

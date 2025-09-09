@@ -1,4 +1,4 @@
-import { MCPResource, MCPTool, MCPResponse, LogEntry, MetricEntry, DeploymentResult, RollbackResult } from '@/types/mcp';
+import { MCPResource, MCPTool, MCPResponse, LogEntry, MetricEntry, DeploymentResult, RollbackResult, EnhancedDeploymentResponse, EnhancedRollbackResponse, EnhancedListResponse } from '@/types/mcp';
 import { parseError, isAuthError } from '@/utils/errorHandler';
 import { tokenRefreshService } from './tokenRefreshService';
 
@@ -162,13 +162,27 @@ class MCPService {
     serviceName: string, 
     version: string, 
     environment: string
-  ): Promise<MCPResponse<DeploymentResult>> {
-    return this.request<DeploymentResult>('/mcp/tools/postMcpToolsDeployService', {
+  ): Promise<MCPResponse<EnhancedDeploymentResponse>> {
+    const response = await this.request<EnhancedDeploymentResponse>('/mcp/tools/deploy_service', {
       method: 'POST',
       body: JSON.stringify({
         arguments: { service_name: serviceName, version, environment }
       })
     }, token);
+
+    // Handle the enhanced response structure
+      if (response.success && response.data) {
+        console.log('🚀 Enhanced deployment response:', response.data);
+        // The backend returns data in result field, but we need to handle the type properly
+        const responseData = response.data as { result?: EnhancedDeploymentResponse } & EnhancedDeploymentResponse;
+        const enhancedData = responseData.result || responseData;
+        return {
+          success: true,
+          data: enhancedData
+        };
+      }
+
+    return response;
   }
 
   async rollbackDeployment(
@@ -176,14 +190,29 @@ class MCPService {
     deploymentId: string, 
     reason: string,
     environment: string
-  ): Promise<MCPResponse<RollbackResult>> {
-    return this.request<RollbackResult>('/mcp/tools/postMcpToolsRollbackService', {
+  ): Promise<MCPResponse<EnhancedRollbackResponse>> {
+    const response = await this.request<EnhancedRollbackResponse>('/mcp/tools/rollback_deployment', {
       method: 'POST',
       body: JSON.stringify({
         arguments: { deployment_id: deploymentId, reason, environment }
       })
     }, token);
+
+    // Handle the enhanced response structure
+      if (response.success && response.data) {
+        console.log('🔄 Enhanced rollback response:', response.data);
+        // The backend returns data in result field, but we need to handle the type properly
+        const responseData = response.data as { result?: EnhancedRollbackResponse } & EnhancedRollbackResponse;
+        const enhancedData = responseData.result || responseData;
+        return {
+          success: true,
+          data: enhancedData
+        };
+      }
+
+    return response;
   }
+
 
   async authenticateUser(token: string): Promise<MCPResponse<unknown>> {
     // For authenticate_user, we need to send the token in both header and body
