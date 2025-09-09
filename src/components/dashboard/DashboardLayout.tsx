@@ -6,7 +6,6 @@ import { useMCPConnection } from '@/hooks/useMCPConnection';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { MainContent } from '@/components/layout/MainContent';
 import { ChatProvider } from '@/contexts/ChatContext';
-import { SkeletonCard, SkeletonTable } from '@/components/common/SkeletonLoader';
 
 interface User {
   name?: string;
@@ -31,7 +30,6 @@ export const DashboardLayout = ({ user, onLogout }: DashboardLayoutProps) => {
     setIsClient(true);
   }, []);
 
-  const availableTabs = isClient ? getAvailableTabs() : [];
   const isCriticalLoading = !isClient || permissionsLoading;
   const isMCPLoading = mcpLoading;
 

@@ -1,18 +1,48 @@
-# AI Powered DevOps Portal - Next.js
+# Autonomous DevOps Agent
 
-A modern AI-powered DevOps portal built with Next.js, TypeScript, Tailwind CSS, and Descope authentication.
+An AI-powered DevOps platform that enables autonomous agents to perform complex DevOps operations through a standardized Model Context Protocol (MCP) interface, with integrated security, monitoring, and role-based access controls for enterprise environments.
 
-## 🚀 Features
+## Team Information
 
-- **Secure Authentication**: Powered by Descope with your project ID
-- **Real-time Dashboard**: Monitor logs, metrics, deployments, and rollbacks
-- **AI Assistant**: ChatGPT-powered AI assistant for DevOps operations
-- **MCP Integration**: Full integration with Model Context Protocol server
-- **Modern UI**: Built with Tailwind CSS and Lucide React icons
-- **TypeScript**: Full type safety throughout the application
-- **Auto-refresh**: Dashboard automatically refreshes every 30 seconds
+**Team Name:** abhishekrnjn_5879
 
-## 🛠️ Local Development Setup
+**Team Members:** Abhishek Ranjan
+
+## Hackathon Theme / Challenge
+
+**Theme:** Theme 2
+
+**Challenge Addressed:** Building an autonomous DevOps platform that enables AI agents to perform complex DevOps operations through a standardized Model Context Protocol (MCP) interface, with integrated security, monitoring, and role-based access controls for enterprise environments.
+
+## What We Built
+
+We built a comprehensive AI-powered DevOps portal that serves as a bridge between human operators and autonomous AI agents for DevOps operations. The platform features:
+
+### Core Features
+- **AI-Powered Operations**: ChatGPT-integrated assistant that can execute DevOps operations through natural language commands
+- **Model Context Protocol (MCP) Integration**: Standardized interface for AI agents to interact with DevOps tools and systems
+- **Enterprise Security**: Descope-based authentication with role-based access controls
+- **Real-time Monitoring**: Live dashboards for logs, metrics, deployments, and rollbacks
+- **Autonomous Deployments**: AI agents can deploy services and perform rollbacks based on system conditions
+- **Comprehensive Logging**: Centralized logging system with filtering and real-time updates
+
+### Key Components
+- **Dashboard Interface**: Modern React-based UI with tabbed navigation
+- **MCP Service Layer**: Handles communication with backend MCP server
+- **Authentication System**: Secure user management with session handling
+- **AI Assistant**: Natural language interface for DevOps operations
+- **Monitoring Tools**: Real-time system health and performance tracking
+
+## How to Run It
+
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+- Descope account and project setup
+- OpenAI API key
+- MCP server running (backend)
+
+### Local Development Setup
 
 1. **Install Dependencies**:
    ```bash
@@ -20,13 +50,8 @@ A modern AI-powered DevOps portal built with Next.js, TypeScript, Tailwind CSS, 
    ```
 
 2. **Environment Configuration**:
-   Copy `.env.example` to `.env.local` and configure your variables:
+   Create `.env.local` file with the following variables:
    ```bash
-   cp .env.example .env.local
-   ```
-   
-   Update the following variables in `.env.local`:
-   ```
    # Descope Configuration
    NEXT_PUBLIC_DESCOPE_PROJECT_ID=your_descope_project_id_here
    NEXT_PUBLIC_DESCOPE_BASE_URL=https://api.descope.com
@@ -34,7 +59,7 @@ A modern AI-powered DevOps portal built with Next.js, TypeScript, Tailwind CSS, 
    # MCP Server Configuration
    NEXT_PUBLIC_MCP_SERVER_URL=http://localhost:8001
    
-   # OpenAI Configuration (for AI Assistant)
+   # OpenAI Configuration
    OPENAI_API_KEY=your_openai_api_key_here
    OPENAI_MODEL=gpt-4o-mini
    
@@ -48,107 +73,96 @@ A modern AI-powered DevOps portal built with Next.js, TypeScript, Tailwind CSS, 
    npm run dev
    ```
 
-4. **Visit Application**:
+4. **Access Application**:
    Open [http://localhost:3000](http://localhost:3000)
 
-## 🚀 Vercel Deployment
+### Production Deployment
 
-### Prerequisites
-- Vercel account
-- Descope project setup
-- OpenAI API key
-- MCP server deployed and accessible
-
-### Deployment Steps
-
-1. **Fork/Clone Repository**:
+1. **Deploy to Vercel**:
    ```bash
-   git clone <your-repo-url>
-   cd devops-mcp-nextjs
-   ```
-
-2. **Deploy to Vercel**:
-   ```bash
-   # Install Vercel CLI
    npm i -g vercel
-   
-   # Deploy
    vercel
    ```
 
-3. **Configure Environment Variables**:
-   In your Vercel dashboard, add the following environment variables:
-   - `NEXT_PUBLIC_DESCOPE_PROJECT_ID`: Your Descope project ID
-   - `NEXT_PUBLIC_DESCOPE_BASE_URL`: https://api.descope.com
-   - `NEXT_PUBLIC_MCP_SERVER_URL`: Your MCP server URL
-   - `OPENAI_API_KEY`: Your OpenAI API key
-   - `OPENAI_MODEL`: gpt-4o-mini (or your preferred model)
-   - `NEXTAUTH_URL`: Your Vercel deployment URL
-   - `NEXTAUTH_SECRET`: A random secret string
+2. **Configure Environment Variables** in Vercel dashboard
+3. **Redeploy** after adding environment variables
 
-4. **Redeploy**:
-   After adding environment variables, redeploy your application.
+## Tech Stack Used
 
-### Alternative: One-Click Deploy
+### Frontend
+- **Next.js 15** - React framework with App Router
+- **TypeScript** - Type-safe development
+- **Tailwind CSS** - Utility-first CSS framework
+- **React 19** - UI library
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-username/devops-mcp-nextjs)
+### Authentication & Security
+- **Descope** - Enterprise authentication platform
+- **JWT Tokens** - Secure session management
+- **Role-based Access Control** - Permission-based feature access
 
-**Note**: You'll still need to configure the environment variables after deployment.
+### AI Integration
+- **OpenAI GPT-4o-mini** - AI assistant for natural language operations
+- **Model Context Protocol (MCP)** - Standardized AI agent interface
 
-## 📱 Usage
+### Backend Integration
+- **RESTful APIs** - MCP server communication
+- **WebSocket Support** - Real-time updates (ready for implementation)
+- **Token Refresh Service** - Automatic session management
 
-1. **Authentication**: Users are redirected to Descope login
-2. **Dashboard Access**: After login, access the full dashboard
-3. **Navigation**: Use tabs to switch between different views:
-   - 📊 Overview: System health and quick stats
-   - 🤖 AI Assistant: AI-powered chatbot for monitoring and deployment operations
-   - 📝 Logs: Real-time system logs
-   - 📊 Metrics: System metrics and performance data
-   - 🚀 Deployments: Deployment history and status
-   - 🔄 Rollbacks: Rollback operations
+### Development Tools
+- **ESLint** - Code linting
+- **TypeScript** - Static type checking
+- **PostCSS** - CSS processing
 
-## 🔧 API Integration
+### Required Tech
+- Node.js 18+
+- Modern web browser
+- Descope account
+- OpenAI API access
+- MCP server backend
 
-The dashboard connects to your MCP (Model Context Protocol) server at `http://localhost:8001` with endpoints:
-- `/mcp/resources` - Available resources (logs, metrics)
-- `/mcp/tools` - Available tools (deploy, rollback, authenticate)
-- `/mcp/resources/logs` - System logs with filtering
-- `/mcp/resources/metrics` - Performance metrics
-- `/mcp/tools/deploy_service` - Deploy services to staging/production
-- `/mcp/tools/rollback_staging` - Rollback staging deployments
-- `/mcp/tools/rollback_production` - Rollback production deployments
+## Demo Video Link
 
-## 🤖 AI Assistant
+[Demo video will be added here]
 
-The AI Assistant is powered by OpenAI's GPT models and can:
-- Answer questions about your DevOps operations
-- Execute MCP tool calls based on user requests
-- Help with logs analysis, metrics interpretation, and deployment guidance
-- Provide intelligent insights about your infrastructure
+## What We'd Do With More Time
 
-**Setup Requirements**:
-1. Get an OpenAI API key from [OpenAI Platform](https://platform.openai.com/api-keys)
-2. Add `OPENAI_API_KEY` to your `.env.local` file
-3. Optionally set `OPENAI_MODEL` (defaults to `gpt-4o-mini`)
+### Enhanced AI Capabilities
+- **Multi-Agent Orchestration**: Deploy multiple specialized AI agents for different DevOps domains
+- **Predictive Analytics**: AI-powered failure prediction and proactive remediation
+- **Natural Language Queries**: Advanced query processing for complex DevOps operations
+- **Learning from Operations**: AI agents that improve over time based on historical data
 
-## 🎨 Technology Stack
+### Advanced Monitoring & Observability
+- **Custom Dashboards**: User-configurable monitoring dashboards
+- **Alert Management**: Intelligent alerting with AI-powered noise reduction
+- **Performance Optimization**: Automated performance tuning recommendations
+- **Cost Optimization**: AI-driven resource optimization suggestions
 
-- **Framework**: Next.js 15 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Authentication**: Descope
-- **AI Integration**: OpenAI GPT models
-- **MCP Protocol**: Model Context Protocol for DevOps operations
-- **Icons**: Lucide React
-- **Charts**: Recharts (ready for use)
-- **Date Handling**: date-fns
+### Enterprise Features
+- **Multi-tenant Support**: Isolated environments for different teams/projects
+- **Audit Logging**: Comprehensive audit trails for compliance
+- **Integration Hub**: Pre-built connectors for popular DevOps tools
+- **Custom Workflows**: Visual workflow builder for complex operations
 
-## 🔒 Authentication Flow
+### Security & Compliance
+- **Zero-trust Architecture**: Enhanced security model implementation
+- **Compliance Frameworks**: Built-in support for SOC2, GDPR, etc.
+- **Secrets Management**: Advanced secret rotation and management
+- **Vulnerability Scanning**: Automated security scanning integration
 
-1. User visits application
-2. Redirected to Descope authentication
-3. After successful login, redirected to dashboard
-4. Session managed automatically by Descope
-5. Logout clears session and redirects to login
+### Scalability & Performance
+- **Microservices Architecture**: Break down into smaller, scalable services
+- **Caching Layer**: Redis-based caching for improved performance
+- **Load Balancing**: Horizontal scaling capabilities
+- **Database Optimization**: Advanced query optimization and indexing
 
-This replaces the previous Streamlit application with a modern, production-ready React/Next.js solution that properly handles authentication and session management.
+### Developer Experience
+- **CLI Tools**: Command-line interface for power users
+- **API Documentation**: Interactive API documentation
+- **SDK Development**: SDKs for popular programming languages
+- **Plugin System**: Extensible plugin architecture
+
+---
+
+*This project represents a significant step toward autonomous DevOps operations, combining modern web technologies with AI capabilities to create a platform that can scale with enterprise needs while maintaining security and reliability.*

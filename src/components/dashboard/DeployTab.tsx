@@ -5,14 +5,14 @@ import { useJWT } from '@/hooks/useJWT';
 import { useMCPConnection } from '@/hooks/useMCPConnection';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useOutboundConnection } from '@/hooks/useOutboundConnection';
-import { DeploymentResult, EnhancedDeploymentResponse } from '@/types/mcp';
+import { EnhancedDeploymentResponse } from '@/types/mcp';
 import { ErrorDisplay } from '@/components/common/ErrorDisplay';
 
 export const DeployTab = () => {
   const { token } = useJWT();
   const { mcpService, isConnected } = useMCPConnection();
   const { canAccessTool } = usePermissions();
-  const { hasAnyConnection, isConnected: isOutboundConnected } = useOutboundConnection();
+  const { hasAnyConnection } = useOutboundConnection();
   const [formData, setFormData] = useState({
     serviceName: '',
     version: '',
@@ -37,7 +37,6 @@ export const DeployTab = () => {
   const [result, setResult] = useState<EnhancedDeploymentResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isAuthError, setIsAuthError] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -55,7 +54,6 @@ export const DeployTab = () => {
 
     setIsLoading(true);
     setError(null);
-    setIsAuthError(false);
     setResult(null);
 
     try {
@@ -72,12 +70,10 @@ export const DeployTab = () => {
         console.log('✅ Deployment successful:', response.data);
       } else {
         setError(response.error || 'Deployment failed');
-        setIsAuthError(response.isAuthError || false);
       }
     } catch (error) {
       console.error('❌ Deployment error:', error);
       setError('Deployment failed');
-      setIsAuthError(false);
     } finally {
       setIsLoading(false);
     }

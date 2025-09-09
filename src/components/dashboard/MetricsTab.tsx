@@ -12,7 +12,6 @@ export const MetricsTab = () => {
   const [metrics, setMetrics] = useState<MetricEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isAuthError, setIsAuthError] = useState(false);
   const [limit, setLimit] = useState(20);
   const [isClient, setIsClient] = useState(false);
   const [hasCheckedConnection, setHasCheckedConnection] = useState(false);
@@ -43,7 +42,6 @@ export const MetricsTab = () => {
 
     setIsLoading(true);
     setError(null);
-    setIsAuthError(false);
 
     try {
       console.log('📡 Making request to getMetrics...');
@@ -58,13 +56,11 @@ export const MetricsTab = () => {
       } else {
         console.log('❌ Response not successful:', response.error);
         setError(response.error || 'Failed to fetch metrics');
-        setIsAuthError(response.isAuthError || false);
         setMetrics([]); // Reset to empty array on error
       }
     } catch (error) {
       console.error('💥 Error fetching metrics:', error);
       setError('Failed to fetch metrics');
-      setIsAuthError(false);
       setMetrics([]); // Reset to empty array on error
     } finally {
       setIsLoading(false);

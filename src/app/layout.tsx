@@ -22,7 +22,6 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const projectId = process.env.NEXT_PUBLIC_DESCOPE_PROJECT_ID;
   const baseUrl = process.env.NEXT_PUBLIC_DESCOPE_BASE_URL || 'https://api.descope.com';
-  const mcpServerUrl = process.env.NEXT_PUBLIC_MCP_SERVER_URL || 'http://localhost:3001';
 
   if (!projectId) {
     throw new Error('NEXT_PUBLIC_DESCOPE_PROJECT_ID environment variable is required');

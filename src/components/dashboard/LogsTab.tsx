@@ -12,7 +12,6 @@ export const LogsTab = () => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isAuthError, setIsAuthError] = useState(false);
   const [filters, setFilters] = useState({ level: '', limit: 10 });
   const [isClient, setIsClient] = useState(false);
   const [hasCheckedConnection, setHasCheckedConnection] = useState(false);
@@ -43,7 +42,6 @@ export const LogsTab = () => {
 
     setIsLoading(true);
     setError(null);
-    setIsAuthError(false);
 
     try {
       console.log('📡 Making request to getLogs...');
@@ -58,13 +56,11 @@ export const LogsTab = () => {
       } else {
         console.log('❌ Response not successful:', response.error);
         setError(response.error || 'Failed to fetch logs');
-        setIsAuthError(response.isAuthError || false);
         setLogs([]); // Reset to empty array on error
       }
     } catch (error) {
       console.error('💥 Error fetching logs:', error);
       setError('Failed to fetch logs');
-      setIsAuthError(false);
       setLogs([]); // Reset to empty array on error
     } finally {
       setIsLoading(false);

@@ -13,8 +13,8 @@ export default function Home() {
   const { isAuthenticated, isSessionLoading } = useSession();
   const { user, isUserLoading } = useUser();
   const { logout } = useDescope();
-  const { isLoading: permissionsLoading } = usePermissions();
-  const { isLoading: mcpLoading } = useMCPConnection();
+  const { } = usePermissions();
+  const { } = useMCPConnection();
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
   const [authCheckComplete, setAuthCheckComplete] = useState(false);

@@ -5,14 +5,14 @@ import { useJWT } from '@/hooks/useJWT';
 import { useMCPConnection } from '@/hooks/useMCPConnection';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useOutboundConnection } from '@/hooks/useOutboundConnection';
-import { RollbackResult, EnhancedRollbackResponse } from '@/types/mcp';
+import { EnhancedRollbackResponse } from '@/types/mcp';
 import { ErrorDisplay } from '@/components/common/ErrorDisplay';
 
 export const RollbackTab = () => {
   const { token } = useJWT();
   const { mcpService, isConnected } = useMCPConnection();
   const { canAccessTool } = usePermissions();
-  const { hasAnyConnection, isConnected: isOutboundConnected } = useOutboundConnection();
+  const { hasAnyConnection } = useOutboundConnection();
   const [formData, setFormData] = useState({
     deploymentId: '',
     reason: '',
@@ -45,7 +45,6 @@ export const RollbackTab = () => {
   const [result, setResult] = useState<EnhancedRollbackResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isAuthError, setIsAuthError] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -63,7 +62,6 @@ export const RollbackTab = () => {
 
     setIsLoading(true);
     setError(null);
-    setIsAuthError(false);
     setResult(null);
 
     try {
@@ -80,12 +78,10 @@ export const RollbackTab = () => {
         console.log('✅ Rollback successful:', response.data);
       } else {
         setError(response.error || 'Rollback failed');
-        setIsAuthError(response.isAuthError || false);
       }
     } catch (error) {
       console.error('❌ Rollback error:', error);
       setError('Rollback failed');
-      setIsAuthError(false);
     } finally {
       setIsLoading(false);
     }
