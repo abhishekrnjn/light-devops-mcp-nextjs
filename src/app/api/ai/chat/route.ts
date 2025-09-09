@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { ToolValidator } from '@/lib/tool-validator';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
@@ -25,12 +26,23 @@ export async function POST(request: NextRequest) {
     const systemMessage = `You are a DevOps assistant that helps manage logs, metrics, and deployments by calling MCP endpoints when needed.
 
 You have access to the following MCP tools:
-- get_logs: Fetch system logs with optional level and limit filters
-- get_metrics: Fetch system metrics with optional limit
-- deploy_service: Deploy services to staging or production environments
-- rollback_staging: Rollback deployments in staging environment
-- rollback_production: Rollback deployments in production environment
-- authenticate_user: Authenticate users
+- deploy_service: Deploy a service to a specific environment (development, staging, production)
+  Required parameters: service_name, version, environment
+- rollback_deployment: Rollback a deployment to previous version
+  Required parameters: deployment_id, reason, environment (staging or production)
+- authenticate_user: Authenticate user and get permissions
+  Required parameters: session_token
+- getMcpResourcesLogs: Get system logs with optional filtering
+  Optional parameters: level (DEBUG, INFO, WARN, ERROR), limit, since
+- getMcpResourcesMetrics: Get performance metrics with optional filtering
+  Optional parameters: limit, service, metric_type
+
+IMPORTANT PARAMETER VALIDATION RULES:
+1. ALWAYS ask follow-up questions for missing required parameters before making tool calls
+2. For deploy_service: Ask "What service name?", "What version?", "Which environment?"
+3. For rollback_deployment: Ask "What deployment ID?", "What's the reason?", "Which environment?"
+4. For authenticate_user: Ask "Please provide your session token"
+5. For logs/metrics: Ask about optional parameters only if the user wants specific filtering
 
 When users ask about logs, metrics, deployments, or rollbacks, you should call the appropriate MCP tool.
 Always provide helpful and accurate information based on the tool responses.
@@ -48,6 +60,7 @@ If you need to call a tool, respond with a JSON object containing:
   ]
 }
 
+If required parameters are missing, ask follow-up questions instead of making the tool call.
 Otherwise, provide a helpful response based on the conversation.`;
 
     // Build conversation history
@@ -80,10 +93,32 @@ Otherwise, provide a helpful response based on the conversation.`;
 
     // Check if the response contains tool calls
     let toolCalls = [];
+    let validationResults = [];
+    
     try {
       const parsedReply = JSON.parse(reply);
       if (parsedReply.toolCalls && Array.isArray(parsedReply.toolCalls)) {
-        toolCalls = parsedReply.toolCalls;
+        // Validate each tool call
+        for (const toolCall of parsedReply.toolCalls) {
+          const validation = ToolValidator.validateToolCall(toolCall);
+          validationResults.push(validation);
+          
+          if (validation.isValid) {
+            toolCalls.push(toolCall);
+          } else {
+            // Generate follow-up questions for invalid tool calls
+            const followUpMessage = ToolValidator.generateFollowUpMessage(
+              toolCall.name, 
+              validation.missingParameters
+            );
+            
+            if (followUpMessage) {
+              // Override the reply with follow-up questions
+              reply = followUpMessage;
+              toolCalls = []; // Clear tool calls since we need more info
+            }
+          }
+        }
       }
     } catch {
       // Not a JSON response, treat as regular text
@@ -101,6 +136,7 @@ Otherwise, provide a helpful response based on the conversation.`;
     return NextResponse.json({ 
       content: reply,
       toolCalls,
+      validationResults,
       conversationHistory: updatedHistory // Return the full conversation history
     });
   } catch (error: unknown) {

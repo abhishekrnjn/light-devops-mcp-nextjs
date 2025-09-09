@@ -1,0 +1,144 @@
+{
+  "mcp_server_url": "http://localhost:8001",
+  "tools": [
+    {
+      "name": "deploy_service",
+      "description": "Deploy a service to a specific environment",
+      "endpoint": "/mcp/tools/deploy_service",
+      "method": "POST",
+      "required_parameters": ["service_name", "version", "environment"],
+      "optional_parameters": [],
+      "parameter_descriptions": {
+        "service_name": "Name of the service to deploy (e.g., user-service, api-gateway)",
+        "version": "Version to deploy (e.g., v1.2.3, latest, main)",
+        "environment": "Target environment: development, staging, or production"
+      },
+      "follow_up_questions": {
+        "service_name": "What is the name of the service you want to deploy?",
+        "version": "What version would you like to deploy? (e.g., v1.2.3, latest)",
+        "environment": "Which environment should I deploy to? (development, staging, or production)"
+      },
+      "validation_rules": {
+        "environment": {
+          "type": "enum",
+          "values": ["development", "staging", "production"]
+        }
+      }
+    },
+    {
+      "name": "rollback_deployment",
+      "description": "Rollback a deployment to previous version",
+      "endpoint": "/mcp/tools/rollback_deployment",
+      "method": "POST",
+      "required_parameters": ["deployment_id", "reason", "environment"],
+      "optional_parameters": [],
+      "parameter_descriptions": {
+        "deployment_id": "ID of the deployment to rollback (e.g., deploy-12345)",
+        "reason": "Reason for the rollback (e.g., Critical bug found, Performance issue)",
+        "environment": "Environment to rollback: staging or production"
+      },
+      "follow_up_questions": {
+        "deployment_id": "What is the deployment ID you want to rollback?",
+        "reason": "What is the reason for this rollback?",
+        "environment": "Which environment should I rollback? (staging or production)"
+      },
+      "validation_rules": {
+        "environment": {
+          "type": "enum",
+          "values": ["staging", "production"]
+        }
+      }
+    },
+    {
+      "name": "authenticate_user",
+      "description": "Authenticate user and get permissions",
+      "endpoint": "/mcp/tools/authenticate_user",
+      "method": "POST",
+      "required_parameters": ["session_token"],
+      "optional_parameters": ["refresh_token"],
+      "parameter_descriptions": {
+        "session_token": "Descope session token for authentication",
+        "refresh_token": "Descope refresh token (optional)"
+      },
+      "follow_up_questions": {
+        "session_token": "Please provide your session token for authentication."
+      }
+    },
+    {
+      "name": "getMcpResourcesLogs",
+      "description": "Get system logs with optional filtering",
+      "endpoint": "/mcp/tools/getMcpResourcesLogs",
+      "method": "POST",
+      "required_parameters": [],
+      "optional_parameters": ["level", "limit", "since"],
+      "parameter_descriptions": {
+        "level": "Log level filter: DEBUG, INFO, WARN, or ERROR",
+        "limit": "Maximum number of log entries to retrieve (default: 100)",
+        "since": "Filter logs since timestamp in ISO format (e.g., 2024-01-01T00:00:00Z)"
+      },
+      "follow_up_questions": {
+        "level": "What log level would you like to filter by? (DEBUG, INFO, WARN, or ERROR)",
+        "limit": "How many log entries would you like to retrieve?",
+        "since": "From what timestamp should I start retrieving logs? (ISO format)"
+      },
+      "validation_rules": {
+        "level": {
+          "type": "enum",
+          "values": ["DEBUG", "INFO", "WARN", "ERROR"]
+        },
+        "limit": {
+          "type": "integer",
+          "min": 1,
+          "max": 1000
+        }
+      }
+    },
+    {
+      "name": "getMcpResourcesMetrics",
+      "description": "Get performance metrics with optional filtering",
+      "endpoint": "/mcp/tools/getMcpResourcesMetrics",
+      "method": "POST",
+      "required_parameters": [],
+      "optional_parameters": ["limit", "service", "metric_type"],
+      "parameter_descriptions": {
+        "limit": "Maximum number of metrics to retrieve (default: 50)",
+        "service": "Filter by specific service name",
+        "metric_type": "Type of metric to retrieve (e.g., cpu, memory, response_time)"
+      },
+      "follow_up_questions": {
+        "limit": "How many metrics would you like to retrieve?",
+        "service": "Which service's metrics are you interested in?",
+        "metric_type": "What type of metrics are you looking for?"
+      },
+      "validation_rules": {
+        "limit": {
+          "type": "integer",
+          "min": 1,
+          "max": 1000
+        }
+      }
+    }
+  ],
+  "resources": [
+    {
+      "name": "logs",
+      "description": "System logs with filtering capabilities",
+      "endpoint": "/mcp/resources/logs",
+      "method": "GET",
+      "optional_parameters": ["level", "limit", "since"]
+    },
+    {
+      "name": "metrics",
+      "description": "Performance and health metrics",
+      "endpoint": "/mcp/resources/metrics",
+      "method": "GET",
+      "optional_parameters": ["limit", "service"]
+    }
+  ],
+  "usage_instructions": {
+    "authentication": "Most operations require authentication. Use the authenticate_user tool first with a valid session token.",
+    "parameter_validation": "Always ask for missing required parameters before making tool calls. Use the follow_up_questions to guide users.",
+    "error_handling": "If a tool call fails, check the error message and ask the user for clarification or try again with corrected parameters.",
+    "conversation_flow": "Maintain conversation context and remember previous parameter values when possible."
+  }
+}
