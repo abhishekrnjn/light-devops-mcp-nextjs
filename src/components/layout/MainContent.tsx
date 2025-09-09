@@ -9,6 +9,7 @@ import { useJWT } from '@/hooks/useJWT';
 import { useMCPConnection } from '@/hooks/useMCPConnection';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useState, useEffect } from 'react';
+import { SkeletonCard, SkeletonTable } from '@/components/common/SkeletonLoader';
 
 interface MainContentProps {
   activeTab: string;
@@ -21,12 +22,86 @@ interface MainContentProps {
   onMobileMenuToggle?: () => void;
   onRefreshConnection?: () => void;
   isLoading?: boolean;
+  isMCPLoading?: boolean;
+  mcpError?: string | null;
+  isConnected?: boolean;
 }
 
-export const MainContent = ({ activeTab, user, onLogout, onMobileMenuToggle, onRefreshConnection, isLoading }: MainContentProps) => {
-  const { isConnected, error: mcpError } = useMCPConnection();
+export const MainContent = ({ 
+  activeTab, 
+  user, 
+  onLogout, 
+  onMobileMenuToggle, 
+  onRefreshConnection, 
+  isLoading,
+  isMCPLoading = false,
+  mcpError: propMCPError,
+  isConnected: propIsConnected
+}: MainContentProps) => {
+  const { isConnected: hookIsConnected, error: hookMCPError } = useMCPConnection();
+  
+  // Use props if provided, otherwise fall back to hooks
+  const isConnected = propIsConnected !== undefined ? propIsConnected : hookIsConnected;
+  const mcpError = propMCPError !== undefined ? propMCPError : hookMCPError;
+  
+  const renderMCPStatus = () => {
+    if (isMCPLoading) {
+      return (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+            <span className="text-sm text-blue-700">Connecting to MCP server...</span>
+          </div>
+        </div>
+      );
+    }
+    
+    if (mcpError && !isConnected) {
+      return (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="text-yellow-600">⚠️</span>
+              <span className="text-sm text-yellow-700">MCP server unavailable</span>
+            </div>
+            {onRefreshConnection && (
+              <button
+                onClick={onRefreshConnection}
+                className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded hover:bg-yellow-200"
+              >
+                Retry
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
+    
+    if (isConnected) {
+      return (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <span className="text-green-600">✅</span>
+            <span className="text-sm text-green-700">MCP server connected</span>
+          </div>
+        </div>
+      );
+    }
+    
+    return null;
+  };
   
   const renderTabContent = () => {
+    // Show skeleton loading for MCP-dependent tabs when MCP is loading
+    if (isMCPLoading && ['logs', 'metrics', 'deploy', 'rollback'].includes(activeTab)) {
+      return (
+        <div className="space-y-4">
+          {renderMCPStatus()}
+          <SkeletonTable rows={5} />
+        </div>
+      );
+    }
+    
     switch (activeTab) {
       case 'overview':
         return <OverviewTab user={user} />;
@@ -61,8 +136,8 @@ export const MainContent = ({ activeTab, user, onLogout, onMobileMenuToggle, onR
               </button>
               
               <div>
-                <h2 className="text-2xl font-bold text-slate-900 capitalize">
-                  {activeTab === 'overview' ? 'Dashboard Overview' : activeTab}
+                <h2 className="text-2xl font-bold text-slate-900">
+                  {activeTab === 'overview' ? 'Dashboard Overview' : activeTab === 'ai' ? 'AI' : activeTab}
                 </h2>
                 <p className="text-sm text-slate-600 mt-1">
                   {getTabDescription(activeTab)}

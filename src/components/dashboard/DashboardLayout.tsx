@@ -6,6 +6,7 @@ import { useMCPConnection } from '@/hooks/useMCPConnection';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { MainContent } from '@/components/layout/MainContent';
 import { ChatProvider } from '@/contexts/ChatContext';
+import { SkeletonCard, SkeletonTable } from '@/components/common/SkeletonLoader';
 
 interface User {
   name?: string;
@@ -31,7 +32,8 @@ export const DashboardLayout = ({ user, onLogout }: DashboardLayoutProps) => {
   }, []);
 
   const availableTabs = isClient ? getAvailableTabs() : [];
-  const isLoading = !isClient || permissionsLoading || mcpLoading;
+  const isCriticalLoading = !isClient || permissionsLoading;
+  const isMCPLoading = mcpLoading;
 
   // Only show full error screen for authentication errors
   if (mcpAuthError) {
@@ -77,7 +79,10 @@ export const DashboardLayout = ({ user, onLogout }: DashboardLayoutProps) => {
           onLogout={onLogout}
           onMobileMenuToggle={() => setIsMobileSidebarOpen(true)}
           onRefreshConnection={refreshConnection}
-          isLoading={isLoading}
+          isLoading={isCriticalLoading}
+          isMCPLoading={isMCPLoading}
+          mcpError={mcpError}
+          isConnected={isConnected}
         />
       </div>
     </ChatProvider>

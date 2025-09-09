@@ -186,7 +186,7 @@ export const AITab = () => {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-slate-900">AI Assistant</h3>
+      <h3 className="text-lg font-semibold text-slate-900">Chat</h3>
       
       <div className="bg-gray-50 rounded-lg p-4 h-96 overflow-y-auto">
         {messages.length === 0 ? (
@@ -250,7 +250,7 @@ export const AITab = () => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder={isConnected ? "Ask about logs, metrics, deployments..." : "MCP Server Offline - AI Assistant unavailable"}
+          placeholder={isConnected ? "Ask about logs, metrics, deployments..." : "MCP Server Offline - Chat unavailable"}
           className="flex-1 border border-gray-300 rounded px-3 py-2 text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
           disabled={isLoading || !isConnected}
         />

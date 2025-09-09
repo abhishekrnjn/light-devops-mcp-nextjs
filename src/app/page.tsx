@@ -29,16 +29,12 @@ export default function Home() {
 
   useEffect(() => {
     if (isClient && !isSessionLoading) {
-      // Add a small delay to ensure session is fully established after OAuth
-      const timer = setTimeout(() => {
-        setAuthCheckComplete(true);
-        if (!isAuthenticated) {
-          // If user is not authenticated, redirect to sign-in
-          router.push('/login');
-        }
-      }, 500); // 500ms delay to prevent OAuth callback flash
-
-      return () => clearTimeout(timer);
+      // Immediate auth check without artificial delay
+      setAuthCheckComplete(true);
+      if (!isAuthenticated) {
+        // If user is not authenticated, redirect to sign-in
+        router.push('/login');
+      }
     }
   }, [isClient, isAuthenticated, isSessionLoading, router]);
 
@@ -70,8 +66,8 @@ export default function Home() {
     );
   }
 
-  // Show loading state during hydration and initial setup
-  if (!isClient || isSessionLoading || isUserLoading || permissionsLoading || mcpLoading || !authCheckComplete) {
+  // Show loading state only for critical authentication checks
+  if (!isClient || isSessionLoading || isUserLoading || !authCheckComplete) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
         <div className="bg-white p-8 rounded-2xl shadow-xl text-center">
