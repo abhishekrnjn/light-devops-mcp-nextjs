@@ -10,7 +10,8 @@ export const usePermissions = () => {
     read_metrics: false,
     deploy_staging: false,
     deploy_production: false,
-    rollback_deployment: false,
+    rollback_staging: false,
+    rollback_production: false,
     authenticate_user: false,
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -29,7 +30,8 @@ export const usePermissions = () => {
         read_metrics: false,
         deploy_staging: false,
         deploy_production: false,
-        rollback_deployment: false,
+        rollback_staging: false,
+        rollback_production: false,
         authenticate_user: false,
       });
       return;

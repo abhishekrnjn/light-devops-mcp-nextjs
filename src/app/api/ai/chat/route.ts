@@ -103,10 +103,10 @@ Otherwise, provide a helpful response based on the conversation.`;
       toolCalls,
       conversationHistory: updatedHistory // Return the full conversation history
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('AI Chat Error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to process AI request' },
+      { error: error instanceof Error ? error.message : 'Failed to process AI request' },
       { status: 500 }
     );
   }

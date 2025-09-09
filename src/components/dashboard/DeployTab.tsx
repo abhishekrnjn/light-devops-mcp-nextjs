@@ -45,11 +45,11 @@ export const DeployTab = () => {
 
       if (response.success) {
         // MCP tools return data in response.data.result structure
-        const toolResponse = response.data as any;
+        const toolResponse = response.data as unknown as Record<string, unknown>;
         if (toolResponse?.success && toolResponse?.result) {
-          setResult(toolResponse.result);
+          setResult(toolResponse.result as DeploymentResult);
         } else {
-          setError(toolResponse?.error || 'Deployment failed');
+          setError((toolResponse?.error as string) || 'Deployment failed');
           setIsAuthError(false);
         }
       } else {
@@ -153,7 +153,7 @@ export const DeployTab = () => {
 
       <ErrorDisplay 
         error={error} 
-        onRetry={() => handleSubmit(new Event('submit') as any)}
+        onRetry={() => handleSubmit(new Event('submit') as unknown as React.FormEvent<HTMLFormElement>)}
         className="mb-4"
       />
 

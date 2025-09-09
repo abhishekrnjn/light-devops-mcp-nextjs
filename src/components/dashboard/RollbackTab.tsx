@@ -45,11 +45,11 @@ export const RollbackTab = () => {
 
       if (response.success) {
         // MCP tools return data in response.data.result structure
-        const toolResponse = response.data as any;
+        const toolResponse = response.data as unknown as Record<string, unknown>;
         if (toolResponse?.success && toolResponse?.result) {
-          setResult(toolResponse.result);
+          setResult(toolResponse.result as RollbackResult);
         } else {
-          setError(toolResponse?.error || 'Rollback failed');
+          setError((toolResponse?.error as string) || 'Rollback failed');
           setIsAuthError(false);
         }
       } else {
@@ -149,7 +149,7 @@ export const RollbackTab = () => {
 
       <ErrorDisplay 
         error={error} 
-        onRetry={() => handleSubmit(new Event('submit') as any)}
+        onRetry={() => handleSubmit(new Event('submit') as unknown as React.FormEvent<HTMLFormElement>)}
         className="mb-4"
       />
 

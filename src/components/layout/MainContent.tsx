@@ -335,7 +335,7 @@ const PermissionMessage = ({ feature, description }: { feature: string; descript
     <div className="text-4xl mb-4">🔒</div>
     <h4 className="text-lg font-semibold text-amber-800 mb-2">Access Restricted</h4>
     <p className="text-amber-700 mb-2">
-      You don't have permission to view {feature}.
+      You don&apos;t have permission to view {feature}.
     </p>
     <p className="text-sm text-amber-600">
       {description}

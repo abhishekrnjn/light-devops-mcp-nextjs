@@ -1,6 +1,6 @@
 'use client';
 
-// @ts-ignore - DescopeClient type will be available at runtime
+// @ts-expect-error - DescopeClient type will be available at runtime
 import { DescopeClient } from '@descope/nextjs-sdk/client';
 
 export interface OutboundConnection {
@@ -63,7 +63,7 @@ export class OutboundService {
   async getConnectionStatus(providerId: string): Promise<OutboundConnection | null> {
     try {
       const connections = await this.sdk.outbound.getConnections();
-      const connection = connections.find((conn: any) => conn.providerId === providerId);
+      const connection = connections.find((conn: Record<string, unknown>) => conn.providerId === providerId);
       
       if (!connection) {
         return null;
@@ -90,14 +90,14 @@ export class OutboundService {
   async getAllConnections(): Promise<OutboundConnection[]> {
     try {
       const connections = await this.sdk.outbound.getConnections();
-      return connections.map((conn: any) => ({
+      return connections.map((conn: Record<string, unknown>) => ({
         id: conn.id,
         providerId: conn.providerId,
         providerName: conn.providerName || conn.providerId,
         status: conn.status === 'active' ? 'connected' : 'disconnected',
-        connectedAt: conn.createdAt ? new Date(conn.createdAt) : undefined,
+        connectedAt: conn.createdAt ? new Date(conn.createdAt as string) : undefined,
         scopes: conn.scopes,
-        lastUsed: conn.lastUsed ? new Date(conn.lastUsed) : undefined,
+        lastUsed: conn.lastUsed ? new Date(conn.lastUsed as string) : undefined,
       }));
     } catch (error) {
       console.error('Error getting all connections:', error);
@@ -108,7 +108,7 @@ export class OutboundService {
   /**
    * Get tokens for a connected provider
    */
-  async getTokens(providerId: string): Promise<any> {
+  async getTokens(providerId: string): Promise<Record<string, unknown>> {
     try {
       const tokens = await this.sdk.outbound.getTokens(providerId);
       return tokens;
@@ -121,7 +121,7 @@ export class OutboundService {
   /**
    * Refresh tokens for a connected provider
    */
-  async refreshTokens(providerId: string): Promise<any> {
+  async refreshTokens(providerId: string): Promise<Record<string, unknown>> {
     try {
       const tokens = await this.sdk.outbound.refreshTokens(providerId);
       return tokens;

@@ -80,7 +80,7 @@ export class PermissionService {
       console.log('🔍 JWT Permissions:', jwtPermissions);
       
       // Start with role-based permissions
-      let permissions = mapRolesToPermissions(roles);
+      const permissions = mapRolesToPermissions(roles);
       
       console.log('📋 Role-based permissions:', permissions);
       

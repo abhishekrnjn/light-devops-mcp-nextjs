@@ -8,7 +8,7 @@ interface TokenInfo {
 
 class TokenRefreshService {
   private tokenCache: Map<string, TokenInfo> = new Map();
-  private refreshPromises: Map<string, Promise<string>> = new Map();
+  private refreshPromises: Map<string, Promise<string | null>> = new Map();
 
   /**
    * Get a valid token, refreshing if necessary

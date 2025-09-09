@@ -9,7 +9,7 @@ interface GitLabConnectModalProps {
 }
 
 export default function GitLabConnectModal({ onSuccess, onClose }: GitLabConnectModalProps) {
-  const handleSuccess = (e: any) => {
+  const handleSuccess = (e: CustomEvent) => {
     console.log('GitLab step-up authentication successful!');
     console.log('User name:', e.detail.user.name);
     console.log('User email:', e.detail.user.email);
@@ -17,7 +17,7 @@ export default function GitLabConnectModal({ onSuccess, onClose }: GitLabConnect
     onSuccess();
   };
 
-  const handleError = (err: any) => {
+  const handleError = (err: Error) => {
     console.error('GitLab step-up authentication error:', err);
   };
 

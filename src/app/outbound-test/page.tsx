@@ -32,10 +32,10 @@ export default function OutboundTestPage() {
           <ol className="list-decimal list-inside text-sm text-blue-700 space-y-1">
             <li>Create a <code className="bg-blue-100 px-1 rounded">.env.local</code> file in your project root</li>
             <li>Add your Descope project ID: <code className="bg-blue-100 px-1 rounded">NEXT_PUBLIC_DESCOPE_PROJECT_ID=your_project_id</code></li>
-            <li>In Descope Console, create a flow named "step-up"</li>
+            <li>In Descope Console, create a flow named &quot;step-up&quot;</li>
             <li>Configure GitLab OAuth provider in the flow</li>
             <li>Publish the flow and make it active</li>
-            <li>Click the "Outbound Apps" dropdown above and then "Connect" on GitLab</li>
+            <li>Click the &quot;Outbound Apps&quot; dropdown above and then &quot;Connect&quot; on GitLab</li>
           </ol>
         </div>
 

@@ -108,7 +108,7 @@ class MCPService {
     if (limit) params.append('limit', limit.toString());
     
     const query = params.toString();
-    const response = await this.request<any>(`/mcp/resources/logs${query ? `?${query}` : ''}`, { method: 'GET' }, token);
+    const response = await this.request<{ data: LogEntry[] }>(`/mcp/resources/logs${query ? `?${query}` : ''}`, { method: 'GET' }, token);
     
     console.log('📋 getLogs full response:', JSON.stringify(response, null, 2));
     
@@ -127,7 +127,7 @@ class MCPService {
       hasDataData: response.data?.data !== undefined
     });
     
-    return response;
+    return { success: response.success, data: response.data?.data || [], error: response.error };
   }
 
   async getMetrics(token: string, limit?: number): Promise<MCPResponse<MetricEntry[]>> {
@@ -135,7 +135,7 @@ class MCPService {
     if (limit) params.append('limit', limit.toString());
     
     const query = params.toString();
-    const response = await this.request<any>(`/mcp/resources/metrics${query ? `?${query}` : ''}`, { method: 'GET' }, token);
+    const response = await this.request<{ data: MetricEntry[] }>(`/mcp/resources/metrics${query ? `?${query}` : ''}`, { method: 'GET' }, token);
     
     console.log('📊 getMetrics full response:', JSON.stringify(response, null, 2));
     
@@ -154,7 +154,7 @@ class MCPService {
       hasDataData: response.data?.data !== undefined
     });
     
-    return response;
+    return { success: response.success, data: response.data?.data || [], error: response.error };
   }
 
   async deployService(
