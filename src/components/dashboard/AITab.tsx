@@ -6,19 +6,15 @@ import { useMCPConnection } from '@/hooks/useMCPConnection';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useChatContext } from '@/contexts/ChatContext';
 import { ChatMessage } from '@/types/ai';
-import { parseError } from '@/utils/errorHandler';
+import { parseError, isAuthError } from '@/utils/errorHandler';
 
 export const AITab = () => {
   const { token } = useJWT();
-  const { resources, tools, isConnected } = useMCPConnection();
+  const { mcpService, resources, tools, isConnected } = useMCPConnection();
   const { permissions, hasPermission } = usePermissions();
-  const { messages, setMessages, setConversationHistory, clearConversation } = useChatContext();
+  const { messages, setMessages, conversationHistory, setConversationHistory, clearConversation } = useChatContext();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [errorCode, setErrorCode] = useState<string | null>(null);
-  const [followUpQuestions, setFollowUpQuestions] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Get permission states
@@ -54,9 +50,6 @@ export const AITab = () => {
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
-    setError(null);
-    setErrorCode(null);
-    setFollowUpQuestions([]);
 
     try {
       // Create context about available tools and permissions
@@ -65,7 +58,6 @@ export const AITab = () => {
         availableTools: safeTools.map(t => t.name),
         userPermissions: permissions,
         mcpServerUrl: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
-        userId: token, // Pass token as userId for now
       };
 
       const response = await fetch('/api/ai/chat', {
@@ -76,38 +68,20 @@ export const AITab = () => {
         },
         body: JSON.stringify({
           message: userMessage.content,
-          context,
-          conversationId: currentConversationId,
+          context: {
+            ...context,
+            conversationHistory: conversationHistory
+          },
+          previousResponseId: conversationHistory.length > 0 ? 'has_history' : null, // Indicate if we have conversation history
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to get AI response');
+        throw new Error('Failed to get AI response');
       }
 
       const data = await response.json();
       
-      // Handle errors from the API
-      if (data.error) {
-        setError(data.error);
-        setErrorCode(data.errorCode);
-        
-        const errorMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: `Error: ${data.error}${data.errorCode ? ` (Code: ${data.errorCode})` : ''}`,
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, errorMessage]);
-        return;
-      }
-
-      // Update conversation ID if provided
-      if (data.conversationId) {
-        setCurrentConversationId(data.conversationId);
-      }
-
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -123,24 +97,10 @@ export const AITab = () => {
         setConversationHistory(data.conversationHistory);
       }
 
-      // Display tool results if any
-      if (data.toolResults && data.toolResults.length > 0) {
-        data.toolResults.forEach((toolResult: { content: string }, index: number) => {
-          const toolResultMessage: ChatMessage = {
-            id: `tool-result-${Date.now()}-${index}`,
-            role: 'assistant',
-            content: `Tool Result: ${toolResult.content}`,
-            timestamp: new Date(),
-          };
-          setMessages(prev => [...prev, toolResultMessage]);
-        });
+      // Execute tool calls if any
+      if (data.toolCalls && data.toolCalls.length > 0) {
+        await executeToolCalls(data.toolCalls);
       }
-
-      // Display follow-up questions if any
-      if (data.followUpQuestions && data.followUpQuestions.length > 0) {
-        setFollowUpQuestions(data.followUpQuestions);
-      }
-
     } catch (error) {
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -154,6 +114,63 @@ export const AITab = () => {
     }
   };
 
+  const executeToolCalls = async (toolCalls: { name: string; arguments: Record<string, unknown> }[]) => {
+    for (const toolCall of toolCalls) {
+      try {
+        let result;
+        switch (toolCall.name) {
+          case 'get_logs':
+            result = await mcpService.getLogs(token!, toolCall.arguments.level as string, toolCall.arguments.limit as number);
+            break;
+          case 'get_metrics':
+            result = await mcpService.getMetrics(token!, toolCall.arguments.limit as number);
+            break;
+          case 'deploy_service':
+            result = await mcpService.deployService(
+              token!,
+              toolCall.arguments.service_name as string,
+              toolCall.arguments.version as string,
+              toolCall.arguments.environment as string
+            );
+            break;
+          case 'rollback_staging':
+            result = await mcpService.rollbackDeployment(
+              token!,
+              toolCall.arguments.deployment_id as string,
+              toolCall.arguments.reason as string,
+              'staging'
+            );
+            break;
+          case 'rollback_production':
+            result = await mcpService.rollbackDeployment(
+              token!,
+              toolCall.arguments.deployment_id as string,
+              toolCall.arguments.reason as string,
+              'production'
+            );
+            break;
+          default:
+            result = { success: false, error: 'Unknown tool' };
+        }
+
+        const toolResultMessage: ChatMessage = {
+          id: `tool-${Date.now()}`,
+          role: 'assistant',
+          content: `Tool ${toolCall.name} executed: ${JSON.stringify(result, null, 2)}`,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, toolResultMessage]);
+      } catch (error) {
+        const errorMessage: ChatMessage = {
+          id: `tool-error-${Date.now()}`,
+          role: 'assistant',
+          content: `Tool ${toolCall.name} failed: ${parseError(error)}`,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      }
+    }
+  };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -165,50 +182,11 @@ export const AITab = () => {
   const handleClearConversation = () => {
     clearConversation();
     setInput('');
-    setError(null);
-    setErrorCode(null);
-    setFollowUpQuestions([]);
-    setCurrentConversationId(null);
-  };
-
-  const handleFollowUpClick = (question: string) => {
-    setInput(question);
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-slate-900">Chat</h3>
-        {currentConversationId && (
-          <span className="text-xs text-slate-500">
-            Conversation: {currentConversationId.slice(-8)}
-          </span>
-        )}
-      </div>
-
-      {/* Error Display */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-          <div className="flex items-start space-x-2">
-            <div className="text-red-500">⚠️</div>
-            <div className="flex-1">
-              <p className="text-red-800 text-sm font-medium">{error}</p>
-              {errorCode && (
-                <p className="text-red-600 text-xs mt-1">Error Code: {errorCode}</p>
-              )}
-            </div>
-            <button
-              onClick={() => {
-                setError(null);
-                setErrorCode(null);
-              }}
-              className="text-red-400 hover:text-red-600"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
+      <h3 className="text-lg font-semibold text-slate-900">Chat</h3>
       
       <div className="bg-gray-50 rounded-lg p-4 h-96 overflow-y-auto">
         {messages.length === 0 ? (
@@ -239,8 +217,6 @@ export const AITab = () => {
                   className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                     message.role === 'user'
                       ? 'bg-blue-500 text-white'
-                      : message.content.startsWith('Error:')
-                      ? 'bg-red-100 text-red-800 border border-red-200'
                       : 'bg-white text-slate-800 border'
                   }`}
                 >
@@ -267,24 +243,6 @@ export const AITab = () => {
           </div>
         )}
       </div>
-
-      {/* Follow-up Questions */}
-      {followUpQuestions.length > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-          <h4 className="text-sm font-medium text-blue-800 mb-2">Suggestions:</h4>
-          <div className="space-y-2">
-            {followUpQuestions.map((question, index) => (
-              <button
-                key={index}
-                onClick={() => handleFollowUpClick(question)}
-                className="block w-full text-left text-sm text-blue-700 hover:text-blue-900 hover:bg-blue-100 p-2 rounded border border-blue-200 hover:border-blue-300 transition-colors"
-              >
-                {question}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div className="flex space-x-2">
         <input
