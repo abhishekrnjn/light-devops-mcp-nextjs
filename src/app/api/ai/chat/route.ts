@@ -120,7 +120,7 @@ Otherwise, provide a helpful response based on the conversation.`;
       temperature: 0.7,
     });
 
-    const reply = completion.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response.";
+    let reply = completion.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response.";
 
     // Check if the response contains tool calls
     let toolCalls = [];

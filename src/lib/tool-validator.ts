@@ -43,15 +43,15 @@ export class ToolValidator {
     for (const param of tool.required_parameters) {
       if (!toolCall.arguments[param] || toolCall.arguments[param] === '') {
         missingParameters.push(param);
-        if (tool.follow_up_questions[param]) {
-          followUpQuestions.push(tool.follow_up_questions[param]);
+        if (tool.follow_up_questions && param in tool.follow_up_questions) {
+          followUpQuestions.push((tool.follow_up_questions as unknown as Record<string, string>)[param]);
         }
       }
     }
 
     // Validate parameter values
     for (const [paramName, value] of Object.entries(toolCall.arguments)) {
-      const validationRule = tool.validation_rules?.[paramName];
+      const validationRule = (tool.validation_rules as unknown as Record<string, { type: string; values?: string[]; min?: number; max?: number }>)?.[paramName];
       if (validationRule) {
         const validationError = this.validateParameter(paramName, value, validationRule);
         if (validationError) {
@@ -72,13 +72,13 @@ export class ToolValidator {
 
   private static validateParameter(paramName: string, value: unknown, rule: { type: string; values?: string[]; min?: number; max?: number }): string | null {
     if (rule.type === 'enum' && rule.values) {
-      if (!rule.values.includes(value)) {
+      if (!rule.values.includes(String(value))) {
         return `${paramName} must be one of: ${rule.values.join(', ')}`;
       }
     }
 
     if (rule.type === 'integer') {
-      const numValue = parseInt(value);
+      const numValue = parseInt(String(value));
       if (isNaN(numValue)) {
         return `${paramName} must be a valid integer`;
       }
@@ -106,7 +106,7 @@ export class ToolValidator {
     if (!tool) return '';
 
     const questions = missingParams
-      .map(param => tool.follow_up_questions[param])
+      .map(param => (tool.follow_up_questions as unknown as Record<string, string>)?.[param])
       .filter(Boolean);
 
     if (questions.length === 0) return '';
