@@ -6,7 +6,7 @@ import { useMCPConnection } from '@/hooks/useMCPConnection';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useChatContext } from '@/contexts/ChatContext';
 import { ChatMessage } from '@/types/ai';
-import { parseError, isAuthError } from '@/utils/errorHandler';
+import { parseError } from '@/utils/errorHandler';
 
 export const AITab = () => {
   const { token } = useJWT();

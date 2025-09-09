@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
 You have access to the following MCP tools:
 - deploy_service: Deploy a service to a specific environment (development, staging, production)
-  Required parameters: service_name, version, environment
+  Required parameters: service_name (NOT "service"), version, environment
 - rollback_deployment: Rollback a deployment to previous version
   Required parameters: deployment_id, reason, environment (staging or production)
 - authenticate_user: Authenticate user and get permissions
@@ -36,6 +36,8 @@ You have access to the following MCP tools:
   Optional parameters: level (DEBUG, INFO, WARN, ERROR), limit, since
 - getMcpResourcesMetrics: Get performance metrics with optional filtering
   Optional parameters: limit, service, metric_type
+
+CRITICAL: Use EXACT parameter names as specified above. For deploy_service, use "service_name" not "service".
 
 IMPORTANT PARAMETER VALIDATION RULES:
 1. ALWAYS ask follow-up questions for missing required parameters before making tool calls
@@ -55,6 +57,35 @@ If you need to call a tool, respond with a JSON object containing:
       "arguments": {
         "param1": "value1",
         "param2": "value2"
+      }
+    }
+  ]
+}
+
+EXAMPLES:
+For deploy_service:
+{
+  "toolCalls": [
+    {
+      "name": "deploy_service",
+      "arguments": {
+        "service_name": "payment-service",
+        "version": "v1.2.3",
+        "environment": "staging"
+      }
+    }
+  ]
+}
+
+For rollback_deployment:
+{
+  "toolCalls": [
+    {
+      "name": "rollback_deployment",
+      "arguments": {
+        "deployment_id": "deploy-12345",
+        "reason": "Critical bug found",
+        "environment": "production"
       }
     }
   ]
@@ -93,13 +124,21 @@ Otherwise, provide a helpful response based on the conversation.`;
 
     // Check if the response contains tool calls
     let toolCalls = [];
-    let validationResults = [];
+    const validationResults = [];
     
     try {
       const parsedReply = JSON.parse(reply);
       if (parsedReply.toolCalls && Array.isArray(parsedReply.toolCalls)) {
         // Validate each tool call
         for (const toolCall of parsedReply.toolCalls) {
+          // Fix common parameter name mismatches
+          if (toolCall.name === 'deploy_service' && toolCall.arguments) {
+            if (toolCall.arguments.service && !toolCall.arguments.service_name) {
+              toolCall.arguments.service_name = toolCall.arguments.service;
+              delete toolCall.arguments.service;
+            }
+          }
+          
           const validation = ToolValidator.validateToolCall(toolCall);
           validationResults.push(validation);
           

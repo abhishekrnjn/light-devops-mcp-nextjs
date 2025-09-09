@@ -2,7 +2,7 @@ import toolsConfig from './tools-config.json';
 
 export interface ToolCall {
   name: string;
-  arguments: Record<string, any>;
+  arguments: Record<string, unknown>;
 }
 
 export interface ValidationResult {
@@ -25,6 +25,14 @@ export class ToolValidator {
         followUpQuestions: [],
         errors: [`Unknown tool: ${toolCall.name}`]
       };
+    }
+
+    // Fix common parameter name mismatches before validation
+    if (toolCall.name === 'deploy_service' && toolCall.arguments) {
+      if (toolCall.arguments.service && !toolCall.arguments.service_name) {
+        toolCall.arguments.service_name = toolCall.arguments.service;
+        delete toolCall.arguments.service;
+      }
     }
 
     const missingParameters: string[] = [];
@@ -62,7 +70,7 @@ export class ToolValidator {
     };
   }
 
-  private static validateParameter(paramName: string, value: any, rule: any): string | null {
+  private static validateParameter(paramName: string, value: unknown, rule: { type: string; values?: string[]; min?: number; max?: number }): string | null {
     if (rule.type === 'enum' && rule.values) {
       if (!rule.values.includes(value)) {
         return `${paramName} must be one of: ${rule.values.join(', ')}`;
