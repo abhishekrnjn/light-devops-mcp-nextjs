@@ -180,7 +180,7 @@ export const Sidebar = ({ activeTab, onTabChange, isCollapsed, onToggleCollapse,
       <div className="p-4 border-t border-gray-200">
         {!isCollapsed && (
           <div className="text-xs text-slate-600 text-center">
-            <p>Powered by MCP</p>
+            <p>Powered by DevOps MCP</p>
             <p className="mt-1">v1.0.0</p>
           </div>
         )}

@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DevOps Authentication",
+  title: "DevOps MCP Agent",
   description: "Simple authentication with Descope",
 };
 

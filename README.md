@@ -14,6 +14,11 @@ A modern, responsive web application that provides an intuitive interface for au
 
 **Challenge Addressed:** Building an autonomous DevOps platform that enables AI agents to perform complex DevOps operations through a standardized Model Context Protocol (MCP) interface, with integrated security, monitoring, and role-based access controls for enterprise environments.
 
+## Project Deployed at
+
+[https://light-devops-mcp-nextjs.vercel.app]
+
+
 ## Demo Video Link
 
 [Demo video will be added here]
