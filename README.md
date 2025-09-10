@@ -1,6 +1,6 @@
-# Autonomous DevOps Agent
+# Light DevOps MCP Frontend
 
-An AI-powered DevOps platform that enables autonomous agents to perform complex DevOps operations through a standardized Model Context Protocol (MCP) interface, with integrated security, monitoring, and role-based access controls for enterprise environments.
+A modern, responsive web application that provides an intuitive interface for autonomous DevOps operations through Model Context Protocol (MCP) integration. Built with Next.js 15, TypeScript, and Descope authentication, offering real-time monitoring, deployment management, and role-based access controls for enterprise environments.
 
 ## Team Information
 
@@ -24,22 +24,30 @@ An AI-powered DevOps platform that enables autonomous agents to perform complex 
 
 ## What We Built
 
-We built a comprehensive AI-powered DevOps portal that serves as a bridge between human operators and autonomous AI agents for DevOps operations. The platform features:
+We built a comprehensive, production-ready DevOps portal that serves as the frontend interface for autonomous DevOps operations. The platform features:
 
 ### Core Features
-- **AI-Powered Operations**: ChatGPT-integrated assistant that can execute DevOps operations through natural language commands
-- **Model Context Protocol (MCP) Integration**: Standardized interface for AI agents to interact with DevOps tools and systems
-- **Enterprise Security**: Descope-based authentication with role-based access controls
+- **Modern Web Interface**: Next.js 15 with App Router, TypeScript, and Tailwind CSS
+- **Model Context Protocol (MCP) Integration**: Seamless communication with backend MCP server
+- **Enterprise Authentication**: Descope-based authentication with JWT token management
 - **Real-time Monitoring**: Live dashboards for logs, metrics, deployments, and rollbacks
-- **Autonomous Deployments**: AI agents can deploy services and perform rollbacks based on system conditions
-- **Comprehensive Logging**: Centralized logging system with filtering and real-time updates
+- **Role-based Access Control**: Dynamic UI based on user permissions and roles
+- **Responsive Design**: Mobile-first design with collapsible sidebar and mobile navigation
 
 ### Key Components
-- **Dashboard Interface**: Modern React-based UI with tabbed navigation
-- **MCP Service Layer**: Handles communication with backend MCP server
-- **Authentication System**: Secure user management with session handling
-- **AI Assistant**: Natural language interface for DevOps operations
-- **Monitoring Tools**: Real-time system health and performance tracking
+- **Dashboard Layout**: Clean, modern interface with tabbed navigation and sidebar
+- **MCP Service Layer**: Robust communication layer with automatic retry and error handling
+- **Authentication System**: Secure user management with automatic token refresh
+- **Permission Management**: Dynamic feature visibility based on user roles
+- **Error Handling**: Comprehensive error handling with authentication error detection
+- **Data Visualization**: Real-time data display with loading states and error boundaries
+
+### User Experience
+- **Intuitive Navigation**: Tabbed interface for easy access to different DevOps functions
+- **Real-time Updates**: Automatic data refresh with loading indicators
+- **Mobile Responsive**: Full mobile support with hamburger menu and touch-friendly interface
+- **Error Recovery**: Graceful error handling with user-friendly error messages
+- **Session Management**: Automatic token refresh and session validation
 
 ## How to Run It
 
@@ -97,77 +105,73 @@ We built a comprehensive AI-powered DevOps portal that serves as a bridge betwee
 
 ## Tech Stack Used
 
-### Frontend
-- **Next.js 15** - React framework with App Router
-- **TypeScript** - Type-safe development
-- **Tailwind CSS** - Utility-first CSS framework
-- **React 19** - UI library
+### Frontend Framework
+- **Next.js 15** - React framework with App Router and Server Components
+- **React 19** - Latest React with concurrent features and improved performance
+- **TypeScript 5** - Type-safe development with strict type checking
+- **Tailwind CSS 4** - Utility-first CSS framework with modern features
 
 ### Authentication & Security
-- **Descope** - Enterprise authentication platform
-- **JWT Tokens** - Secure session management
-- **Role-based Access Control** - Permission-based feature access
-
-### AI Integration
-- **OpenAI GPT-4o-mini** - AI assistant for natural language operations
-- **Model Context Protocol (MCP)** - Standardized AI agent interface
+- **Descope Next.js SDK** - Enterprise authentication platform integration
+- **JWT Tokens** - Secure session management with automatic refresh
+- **Role-based Access Control** - Dynamic permission-based feature access
+- **Session Management** - Automatic token refresh and validation
 
 ### Backend Integration
-- **RESTful APIs** - MCP server communication
-- **WebSocket Support** - Real-time updates (ready for implementation)
-- **Token Refresh Service** - Automatic session management
+- **MCP Service Layer** - Custom service for Model Context Protocol communication
+- **HTTP Client** - Fetch API with retry logic and error handling
+- **Token Refresh Service** - Automatic session management and renewal
+- **Error Boundary** - Comprehensive error handling and recovery
+
+### State Management & Hooks
+- **React Hooks** - useState, useEffect, useContext for state management
+- **Custom Hooks** - usePermissions, useMCPConnection, useTokenRefresh
+- **Context API** - ChatContext for global state management
+- **Local State** - Component-level state for UI interactions
+
+### UI/UX Components
+- **Responsive Design** - Mobile-first approach with breakpoint management
+- **Sidebar Navigation** - Collapsible sidebar with mobile hamburger menu
+- **Tabbed Interface** - Clean navigation between different DevOps functions
+- **Loading States** - Skeleton loaders and progress indicators
+- **Error Boundaries** - Graceful error handling with user-friendly messages
 
 ### Development Tools
-- **ESLint** - Code linting
-- **TypeScript** - Static type checking
-- **PostCSS** - CSS processing
+- **ESLint** - Code linting with Next.js configuration
+- **TypeScript** - Static type checking and IntelliSense
+- **PostCSS** - CSS processing and optimization
+- **Next.js Dev Tools** - Built-in development and debugging tools
 
-### Required Tech
-- Node.js 18+
-- Modern web browser
-- Descope account
-- OpenAI API access
-- MCP server backend
+### Required Dependencies
+- **Node.js 18+** - JavaScript runtime
+- **Modern Web Browser** - Chrome, Firefox, Safari, Edge
+- **Descope Account** - Authentication service
+- **MCP Server Backend** - Backend API server
 
 
 ## What We'd Do With More Time
 
-### Enhanced AI Capabilities
-- **Multi-Agent Orchestration**: Deploy multiple specialized AI agents for different DevOps domains
-- **Predictive Analytics**: AI-powered failure prediction and proactive remediation
-- **Natural Language Queries**: Advanced query processing for complex DevOps operations
-- **Learning from Operations**: AI agents that improve over time based on historical data
+### Enhanced User Experience
+- **Real-time Updates**: WebSocket integration for live data streaming
+- **Advanced Dashboards**: Customizable dashboards with drag-and-drop widgets
+- **Dark Mode**: Theme switching with system preference detection
+- **Keyboard Shortcuts**: Power user keyboard navigation
+- **Progressive Web App**: Offline support and mobile app-like experience
 
-### Advanced Monitoring & Observability
-- **Custom Dashboards**: User-configurable monitoring dashboards
-- **Alert Management**: Intelligent alerting with AI-powered noise reduction
-- **Performance Optimization**: Automated performance tuning recommendations
-- **Cost Optimization**: AI-driven resource optimization suggestions
+### Advanced Data Visualization
+- **Interactive Charts**: D3.js or Chart.js integration for complex data visualization
+- **Timeline Views**: Gantt charts for deployment timelines and rollback history
+- **Heat Maps**: Performance heat maps for system monitoring
+- **Custom Widgets**: User-defined monitoring widgets and alerts
+
+### AI Integration
+- **Chat Interface**: AI-powered chat assistant for DevOps operations
+- **Natural Language Queries**: Query logs and metrics using natural language
+- **Predictive Analytics**: AI-powered failure prediction and recommendations
+- **Smart Notifications**: Intelligent alerting with context-aware notifications
 
 ### Enterprise Features
 - **Multi-tenant Support**: Isolated environments for different teams/projects
-- **Audit Logging**: Comprehensive audit trails for compliance
-- **Integration Hub**: Pre-built connectors for popular DevOps tools
+- **Audit Logging**: Comprehensive audit trails with searchable history
 - **Custom Workflows**: Visual workflow builder for complex operations
-
-### Security & Compliance
-- **Zero-trust Architecture**: Enhanced security model implementation
-- **Compliance Frameworks**: Built-in support for SOC2, GDPR, etc.
-- **Secrets Management**: Advanced secret rotation and management
-- **Vulnerability Scanning**: Automated security scanning integration
-
-### Scalability & Performance
-- **Microservices Architecture**: Break down into smaller, scalable services
-- **Caching Layer**: Redis-based caching for improved performance
-- **Load Balancing**: Horizontal scaling capabilities
-- **Database Optimization**: Advanced query optimization and indexing
-
-### Developer Experience
-- **CLI Tools**: Command-line interface for power users
-- **API Documentation**: Interactive API documentation
-- **SDK Development**: SDKs for popular programming languages
-- **Plugin System**: Extensible plugin architecture
-
----
-
-*This project represents a significant step toward autonomous DevOps operations, combining modern web technologies with AI capabilities to create a platform that can scale with enterprise needs while maintaining security and reliability.*
+- **Integration Hub**: Pre-built connectors for popular DevOps tools
