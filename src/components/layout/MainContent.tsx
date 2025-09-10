@@ -6,10 +6,10 @@ import { DeployTab } from '@/components/dashboard/DeployTab';
 import { RollbackTab } from '@/components/dashboard/RollbackTab';
 import { AITab } from '@/components/dashboard/AITab';
 import { useJWT } from '@/hooks/useJWT';
-import { useMCPConnection } from '@/hooks/useMCPConnection';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useState, useEffect } from 'react';
 import { SkeletonCard, SkeletonTable } from '@/components/common/SkeletonLoader';
+import { MCPResource, MCPTool } from '@/types/mcp';
 
 interface MainContentProps {
   activeTab: string;
@@ -25,6 +25,8 @@ interface MainContentProps {
   isMCPLoading?: boolean;
   mcpError?: string | null;
   isConnected?: boolean;
+  resources?: MCPResource[];
+  tools?: MCPTool[];
 }
 
 export const MainContent = ({ 
@@ -36,13 +38,13 @@ export const MainContent = ({
   isLoading,
   isMCPLoading = false,
   mcpError: propMCPError,
-  isConnected: propIsConnected
+  isConnected: propIsConnected,
+  resources = [],
+  tools = []
 }: MainContentProps) => {
-  const { isConnected: hookIsConnected, error: hookMCPError } = useMCPConnection();
-  
-  // Use props if provided, otherwise fall back to hooks
-  const isConnected = propIsConnected !== undefined ? propIsConnected : hookIsConnected;
-  const mcpError = propMCPError !== undefined ? propMCPError : hookMCPError;
+  // Use props from DashboardLayout
+  const isConnected = propIsConnected;
+  const mcpError = propMCPError;
   
   const renderMCPStatus = () => {
     if (isMCPLoading) {
@@ -104,17 +106,17 @@ export const MainContent = ({
     
     switch (activeTab) {
       case 'overview':
-        return <OverviewTab user={user} />;
+        return <OverviewTab user={user} isConnected={isConnected} />;
       case 'logs':
-        return <LogsTab />;
+        return <LogsTab isConnected={isConnected} isLoading={isMCPLoading} />;
       case 'metrics':
-        return <MetricsTab />;
+        return <MetricsTab isConnected={isConnected} isLoading={isMCPLoading} />;
       case 'deploy':
-        return <DeployTab />;
+        return <DeployTab isConnected={isConnected} />;
       case 'rollback':
-        return <RollbackTab />;
+        return <RollbackTab isConnected={isConnected} />;
       case 'ai':
-        return <AITab />;
+        return <AITab isConnected={isConnected} resources={resources} tools={tools} />;
       default:
         return <OverviewTab user={user} />;
     }
@@ -178,9 +180,8 @@ export const MainContent = ({
   );
 };
 
-const OverviewTab = ({ user }: { user: { name?: string; email?: string; userId?: string } | null }) => {
+const OverviewTab = ({ user, isConnected }: { user: { name?: string; email?: string; userId?: string } | null; isConnected?: boolean }) => {
   const { hasPermission } = usePermissions();
-  const { isConnected } = useMCPConnection();
 
   const canReadLogs = hasPermission('read_logs');
   const canReadMetrics = hasPermission('read_metrics');

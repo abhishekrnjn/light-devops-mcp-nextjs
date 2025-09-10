@@ -41,24 +41,36 @@ export const useJWT = () => {
   }, []);
 
   const refreshTokenAndUpdate = useCallback(async () => {
-    const newToken = await tokenRefreshService.refreshToken();
-    if (newToken) {
-      // Update local state with new token data
-      try {
-        const userRoles = getJwtRoles(newToken);
-        const userPermissions = getJwtPermissions(newToken);
-        
-        setSessionToken(newToken);
-        setRoles(userRoles || []);
-        setPermissions(userPermissions || []);
-        
-        return newToken;
-      } catch (error) {
-        console.error('Error updating token data:', error);
+    try {
+      const newToken = await tokenRefreshService.getValidToken();
+      if (newToken) {
+        // Update local state with new token data
+        try {
+          const userRoles = getJwtRoles(newToken);
+          const userPermissions = getJwtPermissions(newToken);
+          
+          setSessionToken(newToken);
+          setRoles(userRoles || []);
+          setPermissions(userPermissions || []);
+          
+          console.log('✅ Token refreshed successfully');
+          return newToken;
+        } catch (error) {
+          console.error('Error updating token data:', error);
+          return null;
+        }
+      } else {
+        console.log('🔑 No valid token available - user may need to re-authenticate');
+        // Clear local state if no valid token
+        setSessionToken(null);
+        setRoles([]);
+        setPermissions([]);
         return null;
       }
+    } catch (error) {
+      console.error('Error refreshing token:', error);
+      return null;
     }
-    return null;
   }, []);
 
   return {

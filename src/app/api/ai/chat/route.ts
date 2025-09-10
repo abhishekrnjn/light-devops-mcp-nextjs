@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { ToolValidator } from '@/lib/tool-validator';
 import { mcpService } from '@/services/mcpService';
+import { SYSTEM_MESSAGE } from '@/lib/prompts';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
@@ -71,45 +72,7 @@ export async function POST(request: NextRequest) {
     const token = authHeader.replace('Bearer ', '');
 
     // Build system message for first interaction or continue conversation
-    const systemMessage = `You are a DevOps assistant that helps manage logs, metrics, and deployments by calling MCP endpoints when needed.
-
-You have access to the following MCP tools:
-- deploy_service: Deploy a service to a specific environment (development, staging, production)
-  Required parameters: service_name, version, environment
-- rollback_deployment: Rollback a deployment to previous version
-  Required parameters: deployment_id, reason, environment (staging or production)
-- authenticate_user: Authenticate user and get permissions
-  Required parameters: session_token
-- getMcpResourcesLogs: Get system logs with optional filtering
-  Optional parameters: level (DEBUG, INFO, WARN, ERROR), limit, since
-- getMcpResourcesMetrics: Get performance metrics with optional filtering
-  Optional parameters: limit, service, metric_type
-
-IMPORTANT PARAMETER VALIDATION RULES:
-1. ALWAYS ask follow-up questions for missing required parameters before making tool calls
-2. For deploy_service: Ask "What service name?", "What version?", "Which environment?"
-3. For rollback_deployment: Ask "What deployment ID?", "What's the reason?", "Which environment?"
-4. For authenticate_user: Ask "Please provide your session token"
-5. For logs/metrics: Ask about optional parameters only if the user wants specific filtering
-
-When users ask about logs, metrics, deployments, or rollbacks, you should call the appropriate MCP tool.
-Always provide helpful and accurate information based on the tool responses.
-
-If you need to call a tool, respond with a JSON object containing:
-{
-  "toolCalls": [
-    {
-      "name": "tool_name",
-      "arguments": {
-        "param1": "value1",
-        "param2": "value2"
-      }
-    }
-  ]
-}
-
-If required parameters are missing, ask follow-up questions instead of making the tool call.
-Otherwise, provide a helpful response based on the conversation.`;
+    const systemMessage = SYSTEM_MESSAGE;
 
     // Build conversation history
     let conversationHistory: Array<{ role: "system" | "user" | "assistant"; content: string }> = [

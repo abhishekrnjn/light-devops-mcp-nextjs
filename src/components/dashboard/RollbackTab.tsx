@@ -2,15 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { useJWT } from '@/hooks/useJWT';
-import { useMCPConnection } from '@/hooks/useMCPConnection';
+import { mcpService } from '@/services/mcpService';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useOutboundConnection } from '@/hooks/useOutboundConnection';
 import { EnhancedRollbackResponse } from '@/types/mcp';
 import { ErrorDisplay } from '@/components/common/ErrorDisplay';
 
-export const RollbackTab = () => {
+interface RollbackTabProps {
+  isConnected?: boolean;
+}
+
+export const RollbackTab = ({ isConnected = false }: RollbackTabProps) => {
   const { token } = useJWT();
-  const { mcpService, isConnected } = useMCPConnection();
   const { canAccessTool } = usePermissions();
   const { hasAnyConnection } = useOutboundConnection();
   const [formData, setFormData] = useState({

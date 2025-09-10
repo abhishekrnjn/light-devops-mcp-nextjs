@@ -1,20 +1,33 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useJWT } from '@/hooks/useJWT';
-import { useMCPConnection } from '@/hooks/useMCPConnection';
+import { mcpService } from '@/services/mcpService';
 import { LogEntry } from '@/types/mcp';
 import { ErrorDisplay } from '@/components/common/ErrorDisplay';
 
-export const LogsTab = () => {
+interface LogsTabProps {
+  isConnected?: boolean;
+  isLoading?: boolean;
+}
+
+export const LogsTab = ({ isConnected = false, isLoading: mcpLoading = false }: LogsTabProps) => {
   const { token } = useJWT();
-  const { mcpService, isConnected, isLoading: mcpLoading } = useMCPConnection();
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState({ level: '', limit: 10 });
+  const [level, setLevel] = useState('');
+  const [limit, setLimit] = useState(10);
   const [isClient, setIsClient] = useState(false);
   const [hasCheckedConnection, setHasCheckedConnection] = useState(false);
+  const mcpServiceRef = useRef(mcpService);
+  const fetchLogsRef = useRef<(() => Promise<void>) | null>(null);
+  const tokenRef = useRef(token);
+  const isConnectedRef = useRef(isConnected);
+  const levelRef = useRef(level);
+  const limitRef = useRef(limit);
+  const isLoadingRef = useRef(isLoading);
+  const hasRequestedRef = useRef(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -27,25 +40,72 @@ export const LogsTab = () => {
     }
   }, [isClient, isConnected]);
 
+  // Update the refs when they change
+  useEffect(() => {
+    mcpServiceRef.current = mcpService;
+  }, [mcpService]);
+
+  useEffect(() => {
+    tokenRef.current = token;
+  }, [token]);
+
+  useEffect(() => {
+    isConnectedRef.current = isConnected;
+  }, [isConnected]);
+
+  useEffect(() => {
+    levelRef.current = level;
+    hasRequestedRef.current = false; // Reset when level changes
+  }, [level]);
+
+  useEffect(() => {
+    limitRef.current = limit;
+    hasRequestedRef.current = false; // Reset when limit changes
+  }, [limit]);
+
+  useEffect(() => {
+    isLoadingRef.current = isLoading;
+  }, [isLoading]);
+
+
   const fetchLogs = useCallback(async () => {
-    console.log('🔄 fetchLogs called with:', { token: !!token, isConnected, filters });
+    const currentToken = tokenRef.current;
+    const currentIsConnected = isConnectedRef.current;
+    const currentLevel = levelRef.current;
+    const currentLimit = limitRef.current;
+    const currentIsLoading = isLoadingRef.current;
     
-    if (!token) {
+    console.log('🔄 fetchLogs called with:', { token: !!currentToken, isConnected: currentIsConnected, level: currentLevel, limit: currentLimit, hasRequested: hasRequestedRef.current });
+    
+    if (!currentToken) {
       console.log('❌ No token available');
       return;
     }
     
-    if (!isConnected) {
+    if (!currentIsConnected) {
       console.log('❌ MCP server not connected');
       return;
     }
 
+    // Prevent multiple concurrent requests
+    if (currentIsLoading) {
+      console.log('⏭️ Request already in progress, skipping...');
+      return;
+    }
+
+    // Prevent duplicate requests for the same parameters
+    if (hasRequestedRef.current) {
+      console.log('⏭️ Request already made for current parameters, skipping...');
+      return;
+    }
+
+    hasRequestedRef.current = true;
     setIsLoading(true);
     setError(null);
 
     try {
       console.log('📡 Making request to getLogs...');
-      const response = await mcpService.getLogs(token, filters.level || undefined, filters.limit);
+      const response = await mcpServiceRef.current.getLogs(currentToken, currentLevel || undefined, currentLimit);
       console.log('📋 LogsTab received response:', response);
       
       if (response.success) {
@@ -65,13 +125,36 @@ export const LogsTab = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [token, filters, mcpService, isConnected]);
+  }, []);
+
+  // Update the ref after fetchLogs is defined - inside useEffect to prevent instability
+  useEffect(() => {
+    fetchLogsRef.current = fetchLogs;
+  }, [fetchLogs]);
 
   useEffect(() => {
-    if (isClient) {
-      fetchLogs();
+    console.log('🔍 LogsTab useEffect triggered:', { 
+      isClient, 
+      hasToken: !!token, 
+      isConnected, 
+      level, 
+      limit,
+      hasRequested: hasRequestedRef.current,
+      mcpLoading
+    });
+    if (isClient && token && isConnected && !hasRequestedRef.current) {
+      console.log('🚀 LogsTab calling fetchLogs');
+      fetchLogsRef.current?.();
+    } else {
+      console.log('⏭️ LogsTab not calling fetchLogs:', {
+        isClient,
+        hasToken: !!token,
+        isConnected,
+        hasRequested: hasRequestedRef.current,
+        mcpLoading
+      });
     }
-  }, [isClient, token, filters, fetchLogs]);
+  }, [isClient, token, isConnected, level, limit, mcpLoading]);
 
   const getLevelColor = (level: string) => {
     switch (level.toUpperCase()) {
@@ -116,8 +199,8 @@ export const LogsTab = () => {
 
       <div className="flex space-x-4">
         <select
-          value={filters.level}
-          onChange={(e) => setFilters({ ...filters, level: e.target.value })}
+          value={level}
+          onChange={(e) => setLevel(e.target.value)}
           className="border border-gray-300 rounded px-3 py-2 text-slate-700 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
           <option value="">All Levels</option>
@@ -127,8 +210,8 @@ export const LogsTab = () => {
         </select>
         <input
           type="number"
-          value={filters.limit}
-          onChange={(e) => setFilters({ ...filters, limit: parseInt(e.target.value) || 10 })}
+          value={limit}
+          onChange={(e) => setLimit(parseInt(e.target.value) || 10)}
           placeholder="Limit"
           className="border border-gray-300 rounded px-3 py-2 w-20 text-slate-700 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
@@ -145,12 +228,14 @@ export const LogsTab = () => {
                   <div className="text-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
                     <p className="text-slate-600">Loading logs...</p>
+                    <p className="text-xs text-slate-500 mt-2">Connection status: {isConnected ? 'Connected' : 'Disconnected'}</p>
                   </div>
                 ) : !isConnected ? (
                   <div className="text-center py-8">
                     <div className="text-4xl mb-4">⚠️</div>
                     <p className="text-slate-600 mb-2">MCP Server Offline</p>
                     <p className="text-sm text-slate-500">Logs cannot be fetched while the server is offline.</p>
+                    <p className="text-xs text-slate-400 mt-2">Debug: isClient={isClient.toString()}, hasToken={!!token}, isConnected={isConnected.toString()}, mcpLoading={mcpLoading.toString()}</p>
                   </div>
                 ) : !Array.isArray(logs) || logs.length === 0 ? (
                   <p className="text-slate-600 text-center py-4">No logs found</p>

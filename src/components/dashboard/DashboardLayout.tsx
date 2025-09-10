@@ -20,7 +20,7 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout = ({ user, onLogout }: DashboardLayoutProps) => {
   const { getAvailableTabs, isLoading: permissionsLoading } = usePermissions();
-  const { isConnected, isLoading: mcpLoading, error: mcpError, isAuthError: mcpAuthError, refreshConnection } = useMCPConnection();
+  const { isConnected, isLoading: mcpLoading, error: mcpError, isAuthError: mcpAuthError, refreshConnection, resources, tools } = useMCPConnection();
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [isClient, setIsClient] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -81,6 +81,8 @@ export const DashboardLayout = ({ user, onLogout }: DashboardLayoutProps) => {
           isMCPLoading={isMCPLoading}
           mcpError={mcpError}
           isConnected={isConnected}
+          resources={resources}
+          tools={tools}
         />
       </div>
     </ChatProvider>

@@ -5,13 +5,33 @@ import { tokenRefreshService } from './tokenRefreshService';
 const MCP_SERVER_URL = process.env.NEXT_PUBLIC_MCP_SERVER_URL || 'http://localhost:8001';
 
 class MCPService {
+  private pendingRequests: Map<string, Promise<MCPResponse<any>>> = new Map();
+
   private async request<T>(
     endpoint: string, 
     options: RequestInit = {}, 
     token?: string,
     retryCount = 0
   ): Promise<MCPResponse<T>> {
+    // Create the full URL first
     const url = `${MCP_SERVER_URL}${endpoint}`;
+    
+    // Create a unique key for this request to enable deduplication
+    // Include query parameters in the key for GET requests
+    const requestKey = `${url}-${options.method || 'GET'}-${JSON.stringify(options.body || '')}`;
+    
+    // Check if there's already a pending request for this endpoint
+    console.log('🔍 Request deduplication check:', { 
+      url, 
+      requestKey, 
+      hasPending: this.pendingRequests.has(requestKey),
+      pendingCount: this.pendingRequests.size,
+      pendingKeys: Array.from(this.pendingRequests.keys())
+    });
+    if (this.pendingRequests.has(requestKey)) {
+      console.log('🔄 Request already pending, waiting for existing request...');
+      return await this.pendingRequests.get(requestKey)!;
+    }
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(options.headers as Record<string, string>),
@@ -24,7 +44,28 @@ class MCPService {
 
     console.log('🌐 Making request to:', url);
     console.log('📋 Headers:', headers);
+    console.log('📞 Request called from:', new Error().stack?.split('\n')[2]?.trim());
 
+    // Create the request promise and store it for deduplication
+    const requestPromise = this.executeRequest<T>(url, options, headers);
+    this.pendingRequests.set(requestKey, requestPromise);
+    console.log('➕ Added request to pending map:', { requestKey, pendingCount: this.pendingRequests.size });
+
+    try {
+      const result = await requestPromise;
+      return result;
+    } finally {
+      // Clean up the pending request
+      this.pendingRequests.delete(requestKey);
+      console.log('➖ Removed request from pending map:', { requestKey, pendingCount: this.pendingRequests.size });
+    }
+  }
+
+  private async executeRequest<T>(
+    url: string,
+    options: RequestInit,
+    headers: Record<string, string>
+  ): Promise<MCPResponse<T>> {
     try {
       const response = await fetch(url, {
         ...options,
@@ -35,23 +76,14 @@ class MCPService {
 
       console.log('📡 Response status:', response.status, response.statusText);
 
-      // Handle 401 Unauthorized - attempt token refresh
-      if (response.status === 401 && retryCount === 0) {
-        console.log('🔄 401 Unauthorized - attempting token refresh...');
-        
-        const refreshedToken = await tokenRefreshService.refreshToken();
-        if (refreshedToken) {
-          console.log('✅ Token refreshed, retrying request...');
-          // Retry the request with the new token
-          return this.request<T>(endpoint, options, refreshedToken, retryCount + 1);
-        } else {
-          console.error('❌ Token refresh failed');
-          return { 
-            success: false, 
-            error: 'Session expired. Please log in again.',
-            isAuthError: true
-          };
-        }
+      // Handle 401 Unauthorized - let Descope handle token refresh
+      if (response.status === 401) {
+        console.log('🔄 401 Unauthorized - session may have expired');
+        return { 
+          success: false, 
+          error: 'Session expired. Please log in again.',
+          isAuthError: true
+        };
       }
 
       if (!response.ok) {

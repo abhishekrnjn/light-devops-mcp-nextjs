@@ -1,28 +1,32 @@
 import { getSessionToken } from '@descope/nextjs-sdk/client';
 
-interface TokenInfo {
-  token: string;
-  expiresAt: number;
-  refreshToken?: string;
-}
-
+/**
+ * Simplified token service that relies on Descope's built-in token management
+ * Descope handles token refresh automatically, so we don't need custom refresh logic
+ */
 class TokenRefreshService {
-  private tokenCache: Map<string, TokenInfo> = new Map();
   private refreshPromises: Map<string, Promise<string | null>> = new Map();
 
   /**
-   * Get a valid token, refreshing if necessary
+   * Get a valid session token
+   * Descope SDK handles token refresh automatically
    */
   async getValidToken(): Promise<string | null> {
     try {
       const sessionToken = getSessionToken();
       if (!sessionToken) {
+        console.log('🔑 No session token available');
         return null;
       }
 
-      // For now, just return the session token
-      // In a more complex implementation, you might want to check expiration
-      // and refresh if needed
+      // Check if token is expired by parsing JWT
+      if (this.isTokenExpired(sessionToken)) {
+        console.log('🔑 Session token expired, Descope will handle refresh automatically');
+        // Let Descope handle the refresh - just return null for now
+        // The next request will trigger Descope's automatic refresh
+        return null;
+      }
+
       return sessionToken;
     } catch (error) {
       console.error('Error getting valid token:', error);
@@ -31,66 +35,24 @@ class TokenRefreshService {
   }
 
   /**
-   * Refresh a token
+   * Check if a JWT token is expired by parsing the exp claim
    */
-  async refreshToken(): Promise<string | null> {
+  private isTokenExpired(token: string): boolean {
     try {
-      // For Descope, we typically don't need to manually refresh tokens
-      // as the SDK handles this automatically
-      const sessionToken = getSessionToken();
-      return sessionToken;
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const currentTime = Math.floor(Date.now() / 1000);
+      return payload.exp < currentTime;
     } catch (error) {
-      console.error('Error refreshing token:', error);
-      return null;
+      console.error('Error parsing token:', error);
+      return true; // Assume expired if we can't parse
     }
   }
 
   /**
-   * Clear cached tokens
+   * Clear any pending refresh operations
    */
   clearCache(): void {
-    this.tokenCache.clear();
     this.refreshPromises.clear();
-  }
-
-  /**
-   * Check if a token is expired
-   */
-  private isTokenExpired(tokenInfo: TokenInfo): boolean {
-    return Date.now() >= tokenInfo.expiresAt;
-  }
-
-  /**
-   * Get token from cache or create new one
-   */
-  private async getCachedToken(key: string): Promise<string | null> {
-    const cached = this.tokenCache.get(key);
-    
-    if (cached && !this.isTokenExpired(cached)) {
-      return cached.token;
-    }
-
-    // If there's already a refresh in progress, wait for it
-    if (this.refreshPromises.has(key)) {
-      return await this.refreshPromises.get(key)!;
-    }
-
-    // Start refresh process
-    const refreshPromise = this.refreshToken();
-    this.refreshPromises.set(key, refreshPromise);
-
-    try {
-      const newToken = await refreshPromise;
-      if (newToken) {
-        this.tokenCache.set(key, {
-          token: newToken,
-          expiresAt: Date.now() + (60 * 60 * 1000), // 1 hour
-        });
-      }
-      return newToken;
-    } finally {
-      this.refreshPromises.delete(key);
-    }
   }
 }
 

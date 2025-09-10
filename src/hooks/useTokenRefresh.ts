@@ -21,7 +21,6 @@ export const useTokenRefresh = () => {
 
   // Return any token refresh utilities if needed
   return {
-    refreshToken: tokenRefreshService.refreshToken.bind(tokenRefreshService),
     getValidToken: tokenRefreshService.getValidToken.bind(tokenRefreshService),
     clearCache: tokenRefreshService.clearCache.bind(tokenRefreshService),
   };

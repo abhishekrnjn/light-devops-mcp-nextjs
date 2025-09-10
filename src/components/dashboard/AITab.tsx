@@ -2,15 +2,21 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useJWT } from '@/hooks/useJWT';
-import { useMCPConnection } from '@/hooks/useMCPConnection';
+import { mcpService } from '@/services/mcpService';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useChatContext } from '@/contexts/ChatContext';
 import { ChatMessage } from '@/types/ai';
 import { parseError } from '@/utils/errorHandler';
+import { MCPResource, MCPTool } from '@/types/mcp';
 
-export const AITab = () => {
+interface AITabProps {
+  isConnected?: boolean;
+  resources?: MCPResource[];
+  tools?: MCPTool[];
+}
+
+export const AITab = ({ isConnected = false, resources = [], tools = [] }: AITabProps) => {
   const { token } = useJWT();
-  const { mcpService, resources, tools, isConnected } = useMCPConnection();
   const { permissions, hasPermission } = usePermissions();
   const { messages, setMessages, conversationHistory, setConversationHistory, clearConversation } = useChatContext();
   const [input, setInput] = useState('');

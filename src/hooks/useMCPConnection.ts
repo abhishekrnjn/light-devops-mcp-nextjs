@@ -4,6 +4,18 @@ import { mcpService } from '@/services/mcpService';
 import { MCPResource, MCPTool } from '@/types/mcp';
 import { parseError, isAuthError as checkIsAuthError } from '@/utils/errorHandler';
 
+// Utility function to check if a JWT token is expired
+const isTokenExpired = (token: string): boolean => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const currentTime = Math.floor(Date.now() / 1000);
+    return payload.exp < currentTime;
+  } catch (error) {
+    console.error('Error parsing token:', error);
+    return true; // Assume expired if we can't parse
+  }
+};
+
 export const useMCPConnection = () => {
   const { token, isAuthenticated } = useJWT();
   const [resources, setResources] = useState<MCPResource[]>([]);
@@ -15,6 +27,9 @@ export const useMCPConnection = () => {
   const [isAuthError, setIsAuthError] = useState(false);
   const [lastHealthCheck, setLastHealthCheck] = useState<number>(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const hasFetchedRef = useRef<boolean>(false);
+  const lastTokenRef = useRef<string | null>(null);
+  const isFetchingRef = useRef<boolean>(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -24,6 +39,22 @@ export const useMCPConnection = () => {
   const performHealthCheck = useCallback(async () => {
     if (!token) {
       console.log('🔍 Health check: No token available');
+      return;
+    }
+
+    // Check if token is expired before making request
+    if (isTokenExpired(token)) {
+      console.log('🔍 Health check: Token expired, skipping health check');
+      setIsConnected(false);
+      setIsAuthError(true);
+      setError('Session expired. Please log in again.');
+      return;
+    }
+
+    // Skip health check if we've checked recently (within 2 minutes)
+    const timeSinceLastCheck = Date.now() - lastHealthCheck;
+    if (timeSinceLastCheck < 120000) { // 2 minutes
+      console.log('⏭️ Skipping health check - checked recently');
       return;
     }
     
@@ -47,6 +78,9 @@ export const useMCPConnection = () => {
           setError(response.error || 'MCP server connection lost');
           setIsAuthError(response.isAuthError || false);
         }
+      } else if (wasConnected) {
+        // Update last check time even if status didn't change
+        setLastHealthCheck(Date.now());
       }
     } catch (error) {
       console.log('🔍 Health check error:', error);
@@ -57,21 +91,52 @@ export const useMCPConnection = () => {
         setIsAuthError(checkIsAuthError(error));
       }
     }
-  }, [token, isConnected]);
+  }, [token, isConnected, lastHealthCheck]);
 
   // Initial data fetch
-  const fetchMCPData = useCallback(async () => {
-    if (!token) return;
+  const fetchMCPData = useCallback(async (currentToken: string) => {
+    console.log('🔄 fetchMCPData called with token:', currentToken ? currentToken.substring(0, 20) + '...' : 'null');
+    
+    if (!currentToken) {
+      console.log('❌ fetchMCPData: No token provided');
+      return;
+    }
 
+    // Prevent multiple concurrent fetches
+    if (isFetchingRef.current) {
+      console.log('⏭️ Data fetch already in progress, skipping...');
+      return;
+    }
+
+    // Check if token is expired before making requests
+    if (isTokenExpired(currentToken)) {
+      console.log('🔍 Data fetch: Token expired, skipping data fetch');
+      setIsConnected(false);
+      setIsAuthError(true);
+      setError('Session expired. Please log in again.');
+      setIsLoading(false);
+      return;
+    }
+
+    console.log('🚀 fetchMCPData: Starting data fetch...');
+    isFetchingRef.current = true;
     setIsLoading(true);
     setError(null);
     setIsAuthError(false);
     
     try {
+      console.log('📡 fetchMCPData: Making API calls to MCP server...');
       const [resourcesResponse, toolsResponse] = await Promise.all([
-        mcpService.getResources(token),
-        mcpService.getTools(token),
+        mcpService.getResources(currentToken),
+        mcpService.getTools(currentToken),
       ]);
+      
+      console.log('📋 fetchMCPData: API responses received:', {
+        resourcesSuccess: resourcesResponse.success,
+        toolsSuccess: toolsResponse.success,
+        resourcesError: resourcesResponse.error,
+        toolsError: toolsResponse.error
+      });
 
       const resourcesSuccess = resourcesResponse.success;
       const toolsSuccess = toolsResponse.success;
@@ -80,17 +145,32 @@ export const useMCPConnection = () => {
       if (resourcesSuccess) {
         setResources(resourcesResponse.data || []);
       } else {
-        setError(resourcesResponse.error || 'Failed to fetch resources');
+        const errorMessage = resourcesResponse.error || 'Failed to fetch resources';
+        console.error('❌ Resources fetch failed:', errorMessage);
+        setError(errorMessage);
         setIsAuthError(resourcesResponse.isAuthError || false);
+        
+        // If it's an auth error, suggest re-authentication
+        if (resourcesResponse.isAuthError) {
+          console.log('🔐 Authentication error detected - user may need to re-login');
+        }
       }
       
       if (toolsSuccess) {
         setTools(toolsResponse.data || []);
       } else {
+        const errorMessage = toolsResponse.error || 'Failed to fetch tools';
+        console.error('❌ Tools fetch failed:', errorMessage);
+        
         // If tools failed but resources succeeded, update error
         if (resourcesSuccess) {
-          setError(toolsResponse.error || 'Failed to fetch tools');
+          setError(errorMessage);
           setIsAuthError(toolsResponse.isAuthError || false);
+          
+          // If it's an auth error, suggest re-authentication
+          if (toolsResponse.isAuthError) {
+            console.log('🔐 Authentication error detected in tools - user may need to re-login');
+          }
         }
       }
       
@@ -109,25 +189,51 @@ export const useMCPConnection = () => {
       setIsConnected(false);
     } finally {
       setIsLoading(false);
+      isFetchingRef.current = false;
     }
-  }, [token]);
+  }, []);
 
   // Initial data fetch effect
   useEffect(() => {
-    if (!isClient) return;
+    console.log('🔍 useMCPConnection useEffect triggered:', { 
+      isClient, 
+      isAuthenticated, 
+      hasToken: !!token, 
+      hasFetched: hasFetchedRef.current, 
+      lastToken: lastTokenRef.current,
+      tokenPreview: token ? token.substring(0, 20) + '...' : 'null'
+    });
+    
+    if (!isClient) {
+      console.log('⏭️ useMCPConnection: Not client yet');
+      return;
+    }
 
     if (!isAuthenticated || !token) {
+      console.log('⏭️ useMCPConnection: Not authenticated or no token', { isAuthenticated, hasToken: !!token });
       setResources([]);
       setTools([]);
       setIsConnected(false);
       setError(null);
       setIsAuthError(false);
       setIsLoading(false);
+      hasFetchedRef.current = false;
+      lastTokenRef.current = null;
+      isFetchingRef.current = false;
       return;
     }
 
-    fetchMCPData();
-  }, [isClient, isAuthenticated, token, fetchMCPData]);
+    // Check if we've already fetched data for this token
+    if (hasFetchedRef.current && lastTokenRef.current === token) {
+      console.log('⏭️ Skipping data fetch - already fetched for this token');
+      return;
+    }
+
+    console.log('🚀 useMCPConnection calling fetchMCPData');
+    hasFetchedRef.current = true;
+    lastTokenRef.current = token;
+    fetchMCPData(token);
+  }, [isClient, isAuthenticated, token]);
 
   // Periodic health check effect (separate from data fetch)
   useEffect(() => {
@@ -138,10 +244,16 @@ export const useMCPConnection = () => {
       clearInterval(intervalRef.current);
     }
 
-    // Set up periodic health check every 30 seconds
+    // Adaptive health check interval:
+    // - If connected: check every 10 minutes
+    // - If disconnected: check every 2 minutes to try to reconnect
+    const intervalTime = isConnected ? 600000 : 120000; // 10 min vs 2 min
+    
+    console.log(`🔍 Setting up health check interval: ${intervalTime / 1000}s (${isConnected ? 'connected' : 'disconnected'})`);
+    
     intervalRef.current = setInterval(() => {
       performHealthCheck();
-    }, 30000);
+    }, intervalTime);
 
     return () => {
       if (intervalRef.current) {
@@ -149,14 +261,15 @@ export const useMCPConnection = () => {
         intervalRef.current = null;
       }
     };
-  }, [isClient, isAuthenticated, token, performHealthCheck]);
+  }, [isClient, isAuthenticated, token, performHealthCheck, isConnected]);
 
   // Manual refresh function
   const refreshConnection = useCallback(() => {
     if (token && isAuthenticated) {
-      fetchMCPData();
+      hasFetchedRef.current = false; // Reset the fetch flag to allow re-fetch
+      fetchMCPData(token);
     }
-  }, [token, isAuthenticated, fetchMCPData]);
+  }, [token, isAuthenticated]);
 
   return {
     resources,

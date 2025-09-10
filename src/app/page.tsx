@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { ClientOnly } from '@/components/ClientOnly';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useMCPConnection } from '@/hooks/useMCPConnection';
 import { useTokenRefresh } from '@/hooks/useTokenRefresh';
 
 export default function Home() {
@@ -14,7 +13,6 @@ export default function Home() {
   const { user, isUserLoading } = useUser();
   const { logout } = useDescope();
   const { } = usePermissions();
-  const { } = useMCPConnection();
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
   const [authCheckComplete, setAuthCheckComplete] = useState(false);

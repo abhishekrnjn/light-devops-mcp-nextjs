@@ -2,15 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { useJWT } from '@/hooks/useJWT';
-import { useMCPConnection } from '@/hooks/useMCPConnection';
+import { mcpService } from '@/services/mcpService';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useOutboundConnection } from '@/hooks/useOutboundConnection';
 import { EnhancedDeploymentResponse } from '@/types/mcp';
 import { ErrorDisplay } from '@/components/common/ErrorDisplay';
 
-export const DeployTab = () => {
+interface DeployTabProps {
+  isConnected?: boolean;
+}
+
+export const DeployTab = ({ isConnected = false }: DeployTabProps) => {
   const { token } = useJWT();
-  const { mcpService, isConnected } = useMCPConnection();
   const { canAccessTool } = usePermissions();
   const { hasAnyConnection } = useOutboundConnection();
   const [formData, setFormData] = useState({

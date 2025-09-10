@@ -1,20 +1,31 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useJWT } from '@/hooks/useJWT';
-import { useMCPConnection } from '@/hooks/useMCPConnection';
+import { mcpService } from '@/services/mcpService';
 import { MetricEntry } from '@/types/mcp';
 import { ErrorDisplay } from '@/components/common/ErrorDisplay';
 
-export const MetricsTab = () => {
+interface MetricsTabProps {
+  isConnected?: boolean;
+  isLoading?: boolean;
+}
+
+export const MetricsTab = ({ isConnected = false, isLoading: mcpLoading = false }: MetricsTabProps) => {
   const { token } = useJWT();
-  const { mcpService, isConnected, isLoading: mcpLoading } = useMCPConnection();
   const [metrics, setMetrics] = useState<MetricEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [limit, setLimit] = useState(20);
   const [isClient, setIsClient] = useState(false);
   const [hasCheckedConnection, setHasCheckedConnection] = useState(false);
+  const mcpServiceRef = useRef(mcpService);
+  const fetchMetricsRef = useRef<(() => Promise<void>) | null>(null);
+  const tokenRef = useRef(token);
+  const isConnectedRef = useRef(isConnected);
+  const limitRef = useRef(limit);
+  const isLoadingRef = useRef(isLoading);
+  const hasRequestedRef = useRef(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -27,25 +38,66 @@ export const MetricsTab = () => {
     }
   }, [isClient, isConnected]);
 
+  // Update the refs when they change
+  useEffect(() => {
+    mcpServiceRef.current = mcpService;
+  }, [mcpService]);
+
+  useEffect(() => {
+    tokenRef.current = token;
+  }, [token]);
+
+  useEffect(() => {
+    isConnectedRef.current = isConnected;
+  }, [isConnected]);
+
+  useEffect(() => {
+    limitRef.current = limit;
+    hasRequestedRef.current = false; // Reset when limit changes
+  }, [limit]);
+
+  useEffect(() => {
+    isLoadingRef.current = isLoading;
+  }, [isLoading]);
+
+
   const fetchMetrics = useCallback(async () => {
-    console.log('🔄 fetchMetrics called with:', { token: !!token, isConnected, limit });
+    const currentToken = tokenRef.current;
+    const currentIsConnected = isConnectedRef.current;
+    const currentLimit = limitRef.current;
+    const currentIsLoading = isLoadingRef.current;
     
-    if (!token) {
+    console.log('🔄 fetchMetrics called with:', { token: !!currentToken, isConnected: currentIsConnected, limit: currentLimit, hasRequested: hasRequestedRef.current });
+    
+    if (!currentToken) {
       console.log('❌ No token available');
       return;
     }
     
-    if (!isConnected) {
+    if (!currentIsConnected) {
       console.log('❌ MCP server not connected');
       return;
     }
 
+    // Prevent multiple concurrent requests
+    if (currentIsLoading) {
+      console.log('⏭️ Request already in progress, skipping...');
+      return;
+    }
+
+    // Prevent duplicate requests for the same parameters
+    if (hasRequestedRef.current) {
+      console.log('⏭️ Request already made for current parameters, skipping...');
+      return;
+    }
+
+    hasRequestedRef.current = true;
     setIsLoading(true);
     setError(null);
 
     try {
       console.log('📡 Making request to getMetrics...');
-      const response = await mcpService.getMetrics(token, limit);
+      const response = await mcpServiceRef.current.getMetrics(currentToken, currentLimit);
       console.log('📊 MetricsTab received response:', response);
       
       if (response.success) {
@@ -65,13 +117,20 @@ export const MetricsTab = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [token, limit, mcpService, isConnected]);
+  }, []);
+
+  // Update the ref after fetchMetrics is defined - inside useEffect to prevent instability
+  useEffect(() => {
+    fetchMetricsRef.current = fetchMetrics;
+  }, [fetchMetrics]);
 
   useEffect(() => {
-    if (isClient) {
-      fetchMetrics();
+    console.log('🔍 MetricsTab useEffect triggered:', { isClient, hasToken: !!token, isConnected, limit, hasRequested: hasRequestedRef.current });
+    if (isClient && token && isConnected && !hasRequestedRef.current) {
+      console.log('🚀 MetricsTab calling fetchMetrics');
+      fetchMetricsRef.current?.();
     }
-  }, [isClient, token, limit, fetchMetrics]);
+  }, [isClient, token, isConnected, limit]);
 
   if (!isClient) {
     return (
