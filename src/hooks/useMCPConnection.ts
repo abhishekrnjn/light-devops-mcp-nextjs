@@ -4,17 +4,7 @@ import { mcpService } from '@/services/mcpService';
 import { MCPResource, MCPTool } from '@/types/mcp';
 import { parseError, isAuthError as checkIsAuthError } from '@/utils/errorHandler';
 
-// Utility function to check if a JWT token is expired
-const isTokenExpired = (token: string): boolean => {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const currentTime = Math.floor(Date.now() / 1000);
-    return payload.exp < currentTime;
-  } catch (error) {
-    console.error('Error parsing token:', error);
-    return true; // Assume expired if we can't parse
-  }
-};
+// Removed isTokenExpired function - let Descope handle token refresh automatically
 
 export const useMCPConnection = () => {
   const { token, isAuthenticated } = useJWT();
@@ -42,14 +32,8 @@ export const useMCPConnection = () => {
       return;
     }
 
-    // Check if token is expired before making request
-    if (isTokenExpired(token)) {
-      console.log('🔍 Health check: Token expired, skipping health check');
-      setIsConnected(false);
-      setIsAuthError(true);
-      setError('Session expired. Please log in again.');
-      return;
-    }
+    // Let Descope handle token refresh automatically
+    // Don't check token expiry here as it can be too aggressive
 
     // Skip health check if we've checked recently (within 2 minutes)
     const timeSinceLastCheck = Date.now() - lastHealthCheck;
@@ -108,15 +92,8 @@ export const useMCPConnection = () => {
       return;
     }
 
-    // Check if token is expired before making requests
-    if (isTokenExpired(currentToken)) {
-      console.log('🔍 Data fetch: Token expired, skipping data fetch');
-      setIsConnected(false);
-      setIsAuthError(true);
-      setError('Session expired. Please log in again.');
-      setIsLoading(false);
-      return;
-    }
+    // Let Descope handle token refresh automatically
+    // Don't check token expiry here as it can be too aggressive
 
     console.log('🚀 fetchMCPData: Starting data fetch...');
     isFetchingRef.current = true;

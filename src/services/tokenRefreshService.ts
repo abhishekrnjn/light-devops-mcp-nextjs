@@ -19,13 +19,9 @@ class TokenRefreshService {
         return null;
       }
 
-      // Check if token is expired by parsing JWT
-      if (this.isTokenExpired(sessionToken)) {
-        console.log('🔑 Session token expired, Descope will handle refresh automatically');
-        // Let Descope handle the refresh - just return null for now
-        // The next request will trigger Descope's automatic refresh
-        return null;
-      }
+      // Let Descope handle token refresh automatically
+      // Don't check expiry here as it can be too aggressive
+      // Descope will handle refresh when needed
 
       return sessionToken;
     } catch (error) {
@@ -34,19 +30,7 @@ class TokenRefreshService {
     }
   }
 
-  /**
-   * Check if a JWT token is expired by parsing the exp claim
-   */
-  private isTokenExpired(token: string): boolean {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const currentTime = Math.floor(Date.now() / 1000);
-      return payload.exp < currentTime;
-    } catch (error) {
-      console.error('Error parsing token:', error);
-      return true; // Assume expired if we can't parse
-    }
-  }
+  // Removed isTokenExpired function - let Descope handle token refresh automatically
 
   /**
    * Clear any pending refresh operations
