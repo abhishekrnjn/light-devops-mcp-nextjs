@@ -5,6 +5,7 @@ import { useJWT } from '@/hooks/useJWT';
 import { mcpService } from '@/services/mcpService';
 import { MetricEntry } from '@/types/mcp';
 import { ErrorDisplay } from '@/components/common/ErrorDisplay';
+import { requestDeduplication } from '@/utils/requestDeduplication';
 
 interface MetricsTabProps {
   isConnected?: boolean;
@@ -26,6 +27,8 @@ export const MetricsTab = ({ isConnected = false, isLoading: mcpLoading = false 
   const limitRef = useRef(limit);
   const isLoadingRef = useRef(isLoading);
   const hasRequestedRef = useRef(false);
+  const lastRequestParamsRef = useRef<string>('');
+  const isRequestInProgressRef = useRef(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -67,7 +70,18 @@ export const MetricsTab = ({ isConnected = false, isLoading: mcpLoading = false 
     const currentLimit = limitRef.current;
     const currentIsLoading = isLoadingRef.current;
     
-    console.log('🔄 fetchMetrics called with:', { token: !!currentToken, isConnected: currentIsConnected, limit: currentLimit, hasRequested: hasRequestedRef.current });
+    // Create a unique key for this request
+    const requestKey = `${currentLimit}`;
+    
+    console.log('🔄 fetchMetrics called with:', { 
+      token: !!currentToken, 
+      isConnected: currentIsConnected, 
+      limit: currentLimit, 
+      requestKey,
+      hasRequested: hasRequestedRef.current,
+      isRequestInProgress: isRequestInProgressRef.current,
+      lastRequestParams: lastRequestParamsRef.current
+    });
     
     if (!currentToken) {
       console.log('❌ No token available');
@@ -80,24 +94,33 @@ export const MetricsTab = ({ isConnected = false, isLoading: mcpLoading = false 
     }
 
     // Prevent multiple concurrent requests
-    if (currentIsLoading) {
+    if (isRequestInProgressRef.current) {
       console.log('⏭️ Request already in progress, skipping...');
       return;
     }
 
     // Prevent duplicate requests for the same parameters
-    if (hasRequestedRef.current) {
-      console.log('⏭️ Request already made for current parameters, skipping...');
+    if (hasRequestedRef.current && lastRequestParamsRef.current === requestKey) {
+      console.log('⏭️ Request already made for same parameters, skipping...');
       return;
     }
 
+    // Mark request as in progress and update parameters
+    isRequestInProgressRef.current = true;
     hasRequestedRef.current = true;
+    lastRequestParamsRef.current = requestKey;
     setIsLoading(true);
     setError(null);
 
     try {
       console.log('📡 Making request to getMetrics...');
-      const response = await mcpServiceRef.current.getMetrics(currentToken, currentLimit);
+      
+      // Use global request deduplication
+      const response = await requestDeduplication.execute(
+        `metrics-${requestKey}`,
+        () => mcpServiceRef.current.getMetrics(currentToken, currentLimit)
+      );
+      
       console.log('📊 MetricsTab received response:', response);
       
       if (response.success) {
@@ -116,19 +139,50 @@ export const MetricsTab = ({ isConnected = false, isLoading: mcpLoading = false 
       setMetrics([]); // Reset to empty array on error
     } finally {
       setIsLoading(false);
+      isRequestInProgressRef.current = false;
     }
   }, []);
 
-  // Update the ref after fetchMetrics is defined - inside useEffect to prevent instability
+  // Update the ref after fetchMetrics is defined - no dependencies to prevent circular issues
   useEffect(() => {
     fetchMetricsRef.current = fetchMetrics;
-  }, [fetchMetrics]);
+  }, []);
 
+  // Comprehensive effect that handles all scenarios with proper deduplication
   useEffect(() => {
-    console.log('🔍 MetricsTab useEffect triggered:', { isClient, hasToken: !!token, isConnected, limit, hasRequested: hasRequestedRef.current });
-    if (isClient && token && isConnected && !hasRequestedRef.current) {
-      console.log('🚀 MetricsTab calling fetchMetrics');
+    const currentRequestKey = `${limit}`;
+    
+    console.log('🔍 MetricsTab useEffect triggered:', { 
+      isClient, 
+      hasToken: !!token, 
+      isConnected, 
+      limit,
+      currentRequestKey,
+      hasRequested: hasRequestedRef.current,
+      lastRequestParams: lastRequestParamsRef.current,
+      isRequestInProgress: isRequestInProgressRef.current
+    });
+    
+    // Only proceed if all conditions are met
+    if (!isClient || !token || !isConnected) {
+      console.log('⏭️ MetricsTab not calling fetchMetrics - missing requirements:', {
+        isClient,
+        hasToken: !!token,
+        isConnected
+      });
+      return;
+    }
+
+    // Check if we need to make a request
+    const shouldMakeRequest = 
+      !hasRequestedRef.current || // Never requested before
+      lastRequestParamsRef.current !== currentRequestKey; // Different parameters
+
+    if (shouldMakeRequest) {
+      console.log('🚀 MetricsTab calling fetchMetrics - conditions met');
       fetchMetricsRef.current?.();
+    } else {
+      console.log('⏭️ MetricsTab skipping fetchMetrics - already requested with same parameters');
     }
   }, [isClient, token, isConnected, limit]);
 
@@ -167,6 +221,25 @@ export const MetricsTab = ({ isConnected = false, isLoading: mcpLoading = false 
             placeholder="Limit"
             className="border border-gray-300 rounded px-3 py-2 w-20 text-slate-700 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
+          <button
+            onClick={() => {
+              console.log('🔧 DEBUG BUTTON CLICKED - Manual metrics call');
+              console.log('🔧 Current state:', {
+                token: !!token,
+                isConnected,
+                limit,
+                hasRequested: hasRequestedRef.current,
+                isLoading
+              });
+              // Reset the hasRequested flag to allow the call
+              hasRequestedRef.current = false;
+              fetchMetrics();
+            }}
+            disabled={isLoading}
+            className="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 text-sm"
+          >
+            {isLoading ? 'Loading...' : '🐛 Debug Call'}
+          </button>
           <button
             onClick={fetchMetrics}
             disabled={isLoading}

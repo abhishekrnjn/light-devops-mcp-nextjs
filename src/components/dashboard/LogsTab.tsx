@@ -5,6 +5,7 @@ import { useJWT } from '@/hooks/useJWT';
 import { mcpService } from '@/services/mcpService';
 import { LogEntry } from '@/types/mcp';
 import { ErrorDisplay } from '@/components/common/ErrorDisplay';
+import { requestDeduplication } from '@/utils/requestDeduplication';
 
 interface LogsTabProps {
   isConnected?: boolean;
@@ -28,6 +29,8 @@ export const LogsTab = ({ isConnected = false, isLoading: mcpLoading = false }: 
   const limitRef = useRef(limit);
   const isLoadingRef = useRef(isLoading);
   const hasRequestedRef = useRef(false);
+  const lastRequestParamsRef = useRef<string>('');
+  const isRequestInProgressRef = useRef(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -75,7 +78,19 @@ export const LogsTab = ({ isConnected = false, isLoading: mcpLoading = false }: 
     const currentLimit = limitRef.current;
     const currentIsLoading = isLoadingRef.current;
     
-    console.log('🔄 fetchLogs called with:', { token: !!currentToken, isConnected: currentIsConnected, level: currentLevel, limit: currentLimit, hasRequested: hasRequestedRef.current });
+    // Create a unique key for this request
+    const requestKey = `${currentLevel}-${currentLimit}`;
+    
+    console.log('🔄 fetchLogs called with:', { 
+      token: !!currentToken, 
+      isConnected: currentIsConnected, 
+      level: currentLevel, 
+      limit: currentLimit, 
+      requestKey,
+      hasRequested: hasRequestedRef.current,
+      isRequestInProgress: isRequestInProgressRef.current,
+      lastRequestParams: lastRequestParamsRef.current
+    });
     
     if (!currentToken) {
       console.log('❌ No token available');
@@ -88,24 +103,33 @@ export const LogsTab = ({ isConnected = false, isLoading: mcpLoading = false }: 
     }
 
     // Prevent multiple concurrent requests
-    if (currentIsLoading) {
+    if (isRequestInProgressRef.current) {
       console.log('⏭️ Request already in progress, skipping...');
       return;
     }
 
     // Prevent duplicate requests for the same parameters
-    if (hasRequestedRef.current) {
-      console.log('⏭️ Request already made for current parameters, skipping...');
+    if (hasRequestedRef.current && lastRequestParamsRef.current === requestKey) {
+      console.log('⏭️ Request already made for same parameters, skipping...');
       return;
     }
 
+    // Mark request as in progress and update parameters
+    isRequestInProgressRef.current = true;
     hasRequestedRef.current = true;
+    lastRequestParamsRef.current = requestKey;
     setIsLoading(true);
     setError(null);
 
     try {
       console.log('📡 Making request to getLogs...');
-      const response = await mcpServiceRef.current.getLogs(currentToken, currentLevel || undefined, currentLimit);
+      
+      // Use global request deduplication
+      const response = await requestDeduplication.execute(
+        `logs-${requestKey}`,
+        () => mcpServiceRef.current.getLogs(currentToken, currentLevel || undefined, currentLimit)
+      );
+      
       console.log('📋 LogsTab received response:', response);
       
       if (response.success) {
@@ -124,37 +148,53 @@ export const LogsTab = ({ isConnected = false, isLoading: mcpLoading = false }: 
       setLogs([]); // Reset to empty array on error
     } finally {
       setIsLoading(false);
+      isRequestInProgressRef.current = false;
     }
   }, []);
 
-  // Update the ref after fetchLogs is defined - inside useEffect to prevent instability
+  // Update the ref after fetchLogs is defined - no dependencies to prevent circular issues
   useEffect(() => {
     fetchLogsRef.current = fetchLogs;
-  }, [fetchLogs]);
+  }, []);
 
+  // Comprehensive effect that handles all scenarios with proper deduplication
   useEffect(() => {
+    const currentRequestKey = `${level}-${limit}`;
+    
     console.log('🔍 LogsTab useEffect triggered:', { 
       isClient, 
       hasToken: !!token, 
       isConnected, 
       level, 
       limit,
+      currentRequestKey,
       hasRequested: hasRequestedRef.current,
-      mcpLoading
+      lastRequestParams: lastRequestParamsRef.current,
+      isRequestInProgress: isRequestInProgressRef.current
     });
-    if (isClient && token && isConnected && !hasRequestedRef.current) {
-      console.log('🚀 LogsTab calling fetchLogs');
-      fetchLogsRef.current?.();
-    } else {
-      console.log('⏭️ LogsTab not calling fetchLogs:', {
+    
+    // Only proceed if all conditions are met
+    if (!isClient || !token || !isConnected) {
+      console.log('⏭️ LogsTab not calling fetchLogs - missing requirements:', {
         isClient,
         hasToken: !!token,
-        isConnected,
-        hasRequested: hasRequestedRef.current,
-        mcpLoading
+        isConnected
       });
+      return;
     }
-  }, [isClient, token, isConnected, level, limit, mcpLoading]);
+
+    // Check if we need to make a request
+    const shouldMakeRequest = 
+      !hasRequestedRef.current || // Never requested before
+      lastRequestParamsRef.current !== currentRequestKey; // Different parameters
+
+    if (shouldMakeRequest) {
+      console.log('🚀 LogsTab calling fetchLogs - conditions met');
+      fetchLogsRef.current?.();
+    } else {
+      console.log('⏭️ LogsTab skipping fetchLogs - already requested with same parameters');
+    }
+  }, [isClient, token, isConnected, level, limit]);
 
   const getLevelColor = (level: string) => {
     switch (level.toUpperCase()) {

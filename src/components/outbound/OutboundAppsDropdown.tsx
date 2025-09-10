@@ -11,7 +11,11 @@ interface OutboundApp {
   isConnected: boolean;
 }
 
-export default function OutboundAppsDropdown() {
+interface OutboundAppsDropdownProps {
+  isCollapsed?: boolean;
+}
+
+export default function OutboundAppsDropdown({ isCollapsed = false }: OutboundAppsDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const { addConnection, isConnected } = useOutboundConnection();
@@ -73,6 +77,65 @@ export default function OutboundAppsDropdown() {
   const connectedCount = apps.filter(app => app.isConnected).length;
   const totalCount = apps.length;
 
+  // When collapsed, show only an icon button
+  if (isCollapsed) {
+    return (
+      <div ref={dropdownRef} className="relative w-full">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-full flex items-center justify-center p-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+          title="Outbound Apps"
+        >
+          <span className="text-xl">🔗</span>
+        </button>
+
+        {/* Dropdown Menu for collapsed state */}
+        {isOpen && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-80 overflow-y-auto">
+            <div className="p-2">
+              <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                Available Apps
+              </div>
+              
+              {apps.map((app) => (
+                <div
+                  key={app.id}
+                  className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center space-x-3 min-w-0 flex-1">
+                    <span className="text-lg flex-shrink-0">{app.icon}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-sm text-gray-900 truncate">{app.name}</div>
+                      <div className="text-xs text-gray-500 truncate">{app.description}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 flex-shrink-0">
+                    {app.isConnected ? (
+                      <div className="flex items-center space-x-1 text-green-600">
+                        <span className="text-xs">✅</span>
+                        <span className="text-xs font-medium">Connected</span>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleConnect(app.id)}
+                        disabled={isConnecting}
+                        className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors disabled:opacity-50 whitespace-nowrap"
+                      >
+                        {isConnecting ? 'Connecting...' : 'Connect'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // When expanded, show full dropdown
   return (
     <div ref={dropdownRef} className="relative w-full">
       {/* Dropdown Trigger */}

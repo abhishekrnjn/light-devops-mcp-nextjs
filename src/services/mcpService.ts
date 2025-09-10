@@ -13,25 +13,18 @@ class MCPService {
     token?: string,
     retryCount = 0
   ): Promise<MCPResponse<T>> {
-    // Create the full URL first
     const url = `${MCP_SERVER_URL}${endpoint}`;
     
-    // Create a unique key for this request to enable deduplication
-    // Include query parameters in the key for GET requests
-    const requestKey = `${url}-${options.method || 'GET'}-${JSON.stringify(options.body || '')}`;
+    // Create a unique key for deduplication (only for GET requests)
+    const method = options.method || 'GET';
+    const requestKey = method === 'GET' ? `${url}-${method}` : `${url}-${method}-${JSON.stringify(options.body || '')}`;
     
-    // Check if there's already a pending request for this endpoint
-    console.log('🔍 Request deduplication check:', { 
-      url, 
-      requestKey, 
-      hasPending: this.pendingRequests.has(requestKey),
-      pendingCount: this.pendingRequests.size,
-      pendingKeys: Array.from(this.pendingRequests.keys())
-    });
-    if (this.pendingRequests.has(requestKey)) {
-      console.log('🔄 Request already pending, waiting for existing request...');
+    // Check for pending GET requests to avoid duplicates
+    if (method === 'GET' && this.pendingRequests.has(requestKey)) {
+      console.log('🔄 GET request already pending, waiting for existing request:', requestKey);
       return await this.pendingRequests.get(requestKey)!;
     }
+    
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(options.headers as Record<string, string>),
@@ -44,27 +37,30 @@ class MCPService {
 
     console.log('🌐 Making request to:', url);
     console.log('📋 Headers:', headers);
-    console.log('📞 Request called from:', new Error().stack?.split('\n')[2]?.trim());
 
-    // Create the request promise and store it for deduplication
-    const requestPromise = this.executeRequest<T>(url, options, headers);
-    this.pendingRequests.set(requestKey, requestPromise);
-    console.log('➕ Added request to pending map:', { requestKey, pendingCount: this.pendingRequests.size });
+    // Create the request promise and store it for deduplication (GET requests only)
+    const requestPromise = this.executeRequest<T>(url, options, headers, token, retryCount);
+    if (method === 'GET') {
+      this.pendingRequests.set(requestKey, requestPromise);
+    }
 
     try {
       const result = await requestPromise;
       return result;
     } finally {
-      // Clean up the pending request
-      this.pendingRequests.delete(requestKey);
-      console.log('➖ Removed request from pending map:', { requestKey, pendingCount: this.pendingRequests.size });
+      // Clean up pending request
+      if (method === 'GET') {
+        this.pendingRequests.delete(requestKey);
+      }
     }
   }
 
   private async executeRequest<T>(
     url: string,
     options: RequestInit,
-    headers: Record<string, string>
+    headers: Record<string, string>,
+    token?: string,
+    retryCount = 0
   ): Promise<MCPResponse<T>> {
     try {
       const response = await fetch(url, {
@@ -76,14 +72,23 @@ class MCPService {
 
       console.log('📡 Response status:', response.status, response.statusText);
 
-      // Handle 401 Unauthorized - let Descope handle token refresh
-      if (response.status === 401) {
-        console.log('🔄 401 Unauthorized - session may have expired');
-        return { 
-          success: false, 
-          error: 'Session expired. Please log in again.',
-          isAuthError: true
-        };
+      // Handle 401 Unauthorized - attempt token refresh
+      if (response.status === 401 && retryCount === 0) {
+        console.log('🔄 401 Unauthorized - attempting token refresh...');
+        
+        const refreshedToken = await tokenRefreshService.getValidToken();
+        if (refreshedToken) {
+          console.log('✅ Token refreshed, retrying request...');
+          // Retry the request with the new token
+          return this.executeRequest<T>(url, options, headers, refreshedToken, retryCount + 1);
+        } else {
+          console.error('❌ Token refresh failed');
+          return { 
+            success: false, 
+            error: 'Session expired. Please log in again.',
+            isAuthError: true
+          };
+        }
       }
 
       if (!response.ok) {

@@ -173,7 +173,7 @@ export const Sidebar = ({ activeTab, onTabChange, isCollapsed, onToggleCollapse,
         {/* Outbound Apps Section */}
         <div className="border-t border-gray-200 pt-4">
           <div className="p-3 relative overflow-visible">
-            <OutboundAppsDropdown />
+            <OutboundAppsDropdown isCollapsed={isCollapsed} />
           </div>
         </div>
       </nav>
