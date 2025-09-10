@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useDescope } from '@descope/nextjs-sdk/client';
-import { OutboundAppConfig, OutboundConnection } from '@/services/outboundService';
+import { OutboundAppConfig } from '@/services/outboundService';
 import { useOutboundConnection } from '@/hooks/useOutboundConnection';
 
 interface OutboundConnectionCardProps {

@@ -46,7 +46,7 @@ export const LogsTab = ({ isConnected = false, isLoading: mcpLoading = false }: 
   // Update the refs when they change
   useEffect(() => {
     mcpServiceRef.current = mcpService;
-  }, [mcpService]);
+  }, []);
 
   useEffect(() => {
     tokenRef.current = token;
@@ -76,7 +76,6 @@ export const LogsTab = ({ isConnected = false, isLoading: mcpLoading = false }: 
     const currentIsConnected = isConnectedRef.current;
     const currentLevel = levelRef.current;
     const currentLimit = limitRef.current;
-    const currentIsLoading = isLoadingRef.current;
     
     // Create a unique key for this request
     const requestKey = `${currentLevel}-${currentLimit}`;

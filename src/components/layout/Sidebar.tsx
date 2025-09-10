@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useMCPConnection } from '@/hooks/useMCPConnection';
 import OutboundAppsDropdown from '@/components/outbound/OutboundAppsDropdown';
 
 interface SidebarProps {
@@ -25,7 +24,6 @@ interface MenuItem {
 
 export const Sidebar = ({ activeTab, onTabChange, isCollapsed, onToggleCollapse, isMobileOpen, onMobileClose }: SidebarProps) => {
   const { hasPermission } = usePermissions();
-  const { isConnected } = useMCPConnection();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {

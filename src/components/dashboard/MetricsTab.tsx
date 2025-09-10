@@ -44,7 +44,7 @@ export const MetricsTab = ({ isConnected = false, isLoading: mcpLoading = false 
   // Update the refs when they change
   useEffect(() => {
     mcpServiceRef.current = mcpService;
-  }, [mcpService]);
+  }, []);
 
   useEffect(() => {
     tokenRef.current = token;
@@ -68,7 +68,6 @@ export const MetricsTab = ({ isConnected = false, isLoading: mcpLoading = false 
     const currentToken = tokenRef.current;
     const currentIsConnected = isConnectedRef.current;
     const currentLimit = limitRef.current;
-    const currentIsLoading = isLoadingRef.current;
     
     // Create a unique key for this request
     const requestKey = `${currentLimit}`;
@@ -222,25 +221,6 @@ export const MetricsTab = ({ isConnected = false, isLoading: mcpLoading = false 
             className="border border-gray-300 rounded px-3 py-2 w-20 text-slate-700 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
           <button
-            onClick={() => {
-              console.log('🔧 DEBUG BUTTON CLICKED - Manual metrics call');
-              console.log('🔧 Current state:', {
-                token: !!token,
-                isConnected,
-                limit,
-                hasRequested: hasRequestedRef.current,
-                isLoading
-              });
-              // Reset the hasRequested flag to allow the call
-              hasRequestedRef.current = false;
-              fetchMetrics();
-            }}
-            disabled={isLoading}
-            className="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 text-sm"
-          >
-            {isLoading ? 'Loading...' : '🐛 Debug Call'}
-          </button>
-          <button
             onClick={fetchMetrics}
             disabled={isLoading}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
@@ -271,9 +251,9 @@ export const MetricsTab = ({ isConnected = false, isLoading: mcpLoading = false 
         ) : Array.isArray(metrics) && metrics.length > 0 ? (
           metrics.map((metric, index) => (
             <div key={index} className="bg-white p-4 rounded-lg border shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium text-slate-900">{metric.name}</h4>
-                <span className="text-xs text-slate-600">{metric.timestamp}</span>
+              <div className="mb-2">
+                <h4 className="font-medium text-slate-900 leading-tight">{metric.name}</h4>
+                <span className="text-xs text-slate-500 mt-1 block">{metric.timestamp}</span>
               </div>
               <div className="text-2xl font-bold text-blue-600">
                 {metric.value} {metric.unit || ''}

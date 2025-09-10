@@ -3,6 +3,7 @@
  */
 
 interface RequestCache {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: Promise<any>;
 }
 
@@ -24,7 +25,7 @@ class RequestDeduplication {
     }
 
     // If we have a cached result, return it
-    if (this.cache[key]) {
+    if (key in this.cache) {
       console.log(`📋 Request ${key} found in cache, returning cached result`);
       return this.cache[key];
     }

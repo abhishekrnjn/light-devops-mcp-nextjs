@@ -210,7 +210,7 @@ export const useMCPConnection = () => {
     hasFetchedRef.current = true;
     lastTokenRef.current = token;
     fetchMCPData(token);
-  }, [isClient, isAuthenticated, token]);
+  }, [isClient, isAuthenticated, token, fetchMCPData]);
 
   // Periodic health check effect (separate from data fetch)
   useEffect(() => {
@@ -246,7 +246,7 @@ export const useMCPConnection = () => {
       hasFetchedRef.current = false; // Reset the fetch flag to allow re-fetch
       fetchMCPData(token);
     }
-  }, [token, isAuthenticated]);
+  }, [token, isAuthenticated, fetchMCPData]);
 
   return {
     resources,

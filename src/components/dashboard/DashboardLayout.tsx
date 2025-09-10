@@ -19,7 +19,7 @@ interface DashboardLayoutProps {
 }
 
 export const DashboardLayout = ({ user, onLogout }: DashboardLayoutProps) => {
-  const { getAvailableTabs, isLoading: permissionsLoading } = usePermissions();
+  const { isLoading: permissionsLoading } = usePermissions();
   const { isConnected, isLoading: mcpLoading, error: mcpError, isAuthError: mcpAuthError, refreshConnection, resources, tools } = useMCPConnection();
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [isClient, setIsClient] = useState(false);
@@ -77,7 +77,6 @@ export const DashboardLayout = ({ user, onLogout }: DashboardLayoutProps) => {
           onLogout={onLogout}
           onMobileMenuToggle={() => setIsMobileSidebarOpen(true)}
           onRefreshConnection={refreshConnection}
-          isLoading={isCriticalLoading}
           isMCPLoading={isMCPLoading}
           mcpError={mcpError}
           isConnected={isConnected}

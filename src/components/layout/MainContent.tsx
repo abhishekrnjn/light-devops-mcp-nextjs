@@ -5,10 +5,8 @@ import { MetricsTab } from '@/components/dashboard/MetricsTab';
 import { DeployTab } from '@/components/dashboard/DeployTab';
 import { RollbackTab } from '@/components/dashboard/RollbackTab';
 import { AITab } from '@/components/dashboard/AITab';
-import { useJWT } from '@/hooks/useJWT';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useState, useEffect } from 'react';
-import { SkeletonCard, SkeletonTable } from '@/components/common/SkeletonLoader';
+import { SkeletonTable } from '@/components/common/SkeletonLoader';
 import { MCPResource, MCPTool } from '@/types/mcp';
 
 interface MainContentProps {
@@ -21,7 +19,6 @@ interface MainContentProps {
   onLogout: () => void;
   onMobileMenuToggle?: () => void;
   onRefreshConnection?: () => void;
-  isLoading?: boolean;
   isMCPLoading?: boolean;
   mcpError?: string | null;
   isConnected?: boolean;
@@ -35,7 +32,6 @@ export const MainContent = ({
   onLogout, 
   onMobileMenuToggle, 
   onRefreshConnection, 
-  isLoading,
   isMCPLoading = false,
   mcpError: propMCPError,
   isConnected: propIsConnected,
@@ -361,49 +357,6 @@ const OverviewTab = ({ user, isConnected }: { user: { name?: string; email?: str
   );
 };
 
-const StatCard = ({ title, value, icon, color, bgColor }: {
-  title: string;
-  value: string;
-  icon: string;
-  color: string;
-  bgColor: string;
-}) => (
-  <div className={`${bgColor} rounded-xl p-6`}>
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm font-medium text-slate-700">{title}</p>
-        <p className={`text-2xl font-bold ${color} mt-1`}>{value}</p>
-      </div>
-      <div className="text-3xl">{icon}</div>
-    </div>
-  </div>
-);
-
-const ActivityItem = ({ icon, title, description, time, status }: {
-  icon: string;
-  title: string;
-  description: string;
-  time: string;
-  status: 'success' | 'info' | 'warning' | 'error';
-}) => {
-  const statusColors = {
-    success: 'text-green-600',
-    info: 'text-blue-600',
-    warning: 'text-yellow-600',
-    error: 'text-red-600',
-  };
-
-  return (
-    <div className="flex items-start space-x-3">
-      <div className="text-xl">{icon}</div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-slate-900">{title}</p>
-        <p className="text-sm text-slate-600">{description}</p>
-        <p className={`text-xs ${statusColors[status]} mt-1`}>{time}</p>
-      </div>
-    </div>
-  );
-};
 
 const PermissionMessage = ({ feature, description }: { feature: string; description: string }) => (
   <div className="text-center py-8 bg-amber-50 border border-amber-200 rounded-lg">

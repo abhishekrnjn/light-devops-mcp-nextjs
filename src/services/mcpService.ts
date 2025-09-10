@@ -1,10 +1,11 @@
-import { MCPResource, MCPTool, MCPResponse, LogEntry, MetricEntry, DeploymentResult, RollbackResult, EnhancedDeploymentResponse, EnhancedRollbackResponse, EnhancedListResponse } from '@/types/mcp';
+import { MCPResource, MCPTool, MCPResponse, LogEntry, MetricEntry, EnhancedDeploymentResponse, EnhancedRollbackResponse } from '@/types/mcp';
 import { parseError, isAuthError } from '@/utils/errorHandler';
 import { tokenRefreshService } from './tokenRefreshService';
 
 const MCP_SERVER_URL = process.env.NEXT_PUBLIC_MCP_SERVER_URL || 'http://localhost:8001';
 
 class MCPService {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private pendingRequests: Map<string, Promise<MCPResponse<any>>> = new Map();
 
   private async request<T>(
@@ -22,7 +23,7 @@ class MCPService {
     // Check for pending GET requests to avoid duplicates
     if (method === 'GET' && this.pendingRequests.has(requestKey)) {
       console.log('🔄 GET request already pending, waiting for existing request:', requestKey);
-      return await this.pendingRequests.get(requestKey)!;
+      return await this.pendingRequests.get(requestKey)! as MCPResponse<T>;
     }
     
     const headers: Record<string, string> = {
