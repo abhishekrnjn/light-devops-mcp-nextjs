@@ -32,7 +32,7 @@ export default function Home() {
       // Immediate auth check without artificial delay
       setAuthCheckComplete(true);
       if (!isAuthenticated) {
-        // If user is not authenticated, redirect to sign-in
+        // If user is not authenticated, redirect to unified auth page
         router.push('/login');
       }
     }
@@ -80,7 +80,7 @@ export default function Home() {
   }
 
   if (!isAuthenticated) {
-    return null; // Will redirect to sign-in
+    return null; // Will redirect to unified auth page
   }
 
   return (

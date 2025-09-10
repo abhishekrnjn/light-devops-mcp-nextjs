@@ -18,6 +18,10 @@ An AI-powered DevOps platform that enables autonomous agents to perform complex 
 
 [Demo video will be added here]
 
+## Github Repo link
+
+[https://github.com/abhishekrnjn/light-devops-mcp-nextjs]
+
 ## What We Built
 
 We built a comprehensive AI-powered DevOps portal that serves as a bridge between human operators and autonomous AI agents for DevOps operations. The platform features:
