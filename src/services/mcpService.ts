@@ -93,9 +93,24 @@ class MCPService {
 
       if (!response.ok) {
         const error = await response.text();
-        console.error('❌ Error response:', error);
-        const formattedError = parseError(error);
-        return { success: false, error: formattedError, isAuthError: isAuthError(error) };
+        console.error('❌ Error response:', error, 'Status:', response.status);
+        
+        // Create error object with status code for proper parsing
+        let parsedError = {};
+        try {
+          parsedError = error ? JSON.parse(error) : {};
+        } catch {
+          // If error is not JSON, treat it as a plain text error
+          parsedError = { error: error };
+        }
+        
+        const errorWithStatus = {
+          ...parsedError,
+          status_code: response.status
+        };
+        
+        const formattedError = parseError(errorWithStatus);
+        return { success: false, error: formattedError, isAuthError: isAuthError(errorWithStatus) };
       }
 
       const data = await response.json();

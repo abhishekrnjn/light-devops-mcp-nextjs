@@ -50,12 +50,32 @@ const formatError = (error: ErrorResponse): string => {
 
   // Handle permission errors
   if (error.status_code === 403) {
-    return 'You do not have permission to perform this action.';
+    return `Permission denied (403 Forbidden). ${error.detail || error.error_message || 'You do not have permission to perform this action.'}`;
+  }
+
+  // Handle not found errors
+  if (error.status_code === 404) {
+    return `Resource not found (404). ${error.detail || error.error_message || 'The requested resource does not exist.'}`;
+  }
+
+  // Handle method not allowed errors
+  if (error.status_code === 405) {
+    return `Method not allowed (405). ${error.detail || error.error_message || 'The HTTP method is not supported for this resource.'}`;
   }
 
   // Handle server errors
   if (error.status_code === 500) {
-    return 'Server error occurred. Please try again later.';
+    return `Server error (500). ${error.detail || error.error_message || 'An internal server error occurred. Please try again later.'}`;
+  }
+
+  // Handle bad gateway errors
+  if (error.status_code === 502) {
+    return `Bad gateway (502). ${error.detail || error.error_message || 'The server received an invalid response from an upstream server.'}`;
+  }
+
+  // Handle service unavailable errors
+  if (error.status_code === 503) {
+    return `Service unavailable (503). ${error.detail || error.error_message || 'The server is temporarily unavailable. Please try again later.'}`;
   }
 
   // Handle network errors
