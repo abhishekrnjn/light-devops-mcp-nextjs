@@ -64,6 +64,14 @@ export const AITab = ({ isConnected = false, resources = [], tools = [] }: AITab
         availableTools: safeTools.map(t => t.name),
         userPermissions: permissions,
         mcpServerUrl: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
+        // Include the correct tool names that match the tools config
+        supportedTools: [
+          'deploy_service',
+          'rollback_deployment', 
+          'getMcpResourcesLogs',
+          'getMcpResourcesMetrics',
+          'authenticate_user'
+        ],
       };
 
       const response = await fetch('/api/ai/chat', {
@@ -125,10 +133,14 @@ export const AITab = ({ isConnected = false, resources = [], tools = [] }: AITab
       try {
         let result;
         switch (toolCall.name) {
-          case 'get_logs':
-            result = await mcpService.getLogs(token!, toolCall.arguments.level as string, toolCall.arguments.limit as number);
+          case 'getMcpResourcesLogs':
+            result = await mcpService.getLogs(
+              token!, 
+              toolCall.arguments.level as string, 
+              toolCall.arguments.limit as number
+            );
             break;
-          case 'get_metrics':
+          case 'getMcpResourcesMetrics':
             result = await mcpService.getMetrics(token!, toolCall.arguments.limit as number);
             break;
           case 'deploy_service':
@@ -139,21 +151,16 @@ export const AITab = ({ isConnected = false, resources = [], tools = [] }: AITab
               toolCall.arguments.environment as string
             );
             break;
-          case 'rollback_staging':
+          case 'rollback_deployment':
             result = await mcpService.rollbackDeployment(
               token!,
               toolCall.arguments.deployment_id as string,
               toolCall.arguments.reason as string,
-              'staging'
+              toolCall.arguments.environment as string
             );
             break;
-          case 'rollback_production':
-            result = await mcpService.rollbackDeployment(
-              token!,
-              toolCall.arguments.deployment_id as string,
-              toolCall.arguments.reason as string,
-              'production'
-            );
+          case 'authenticate_user':
+            result = await mcpService.authenticateUser(token!);
             break;
           default:
             result = { success: false, error: 'Unknown tool' };
